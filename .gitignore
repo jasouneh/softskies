@@ -1,0 +1,21 @@
+# Dependencies and package-manager caches
+node_modules/
+.pnpm-store/
+.yarn/
+
+# Generated static site bundle; rebuild with `node scripts/build.mjs`.
+dist/
+
+# Test and coverage output
+coverage/
+.nyc_output/
+
+# Local editor/system files
+.DS_Store
+.idea/
+.vscode/
+
+# Local environment overrides
+.env
+.env.*
+!.env.example

@@ -1,0 +1,19 @@
+{
+  "name": "polyfly",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Foundation for a browser-based low-poly phoenix flight game on GitHub Pages.",
+  "scripts": {
+    "dev": "node scripts/serve.mjs . 5173",
+    "build": "node scripts/build.mjs",
+    "preview": "node scripts/serve.mjs dist 4173",
+    "test": "node --test tests/source-entry.test.mjs",
+    "validate:source": "node --test tests/source-entry.test.mjs",
+    "validate:bundle": "node scripts/build.mjs && node --test tests/bundle-shape.test.mjs",
+    "validate": "node --test tests/source-entry.test.mjs && node scripts/build.mjs && node --test tests/bundle-shape.test.mjs"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

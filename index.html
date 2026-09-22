@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="polyFly: a low-poly phoenix flight game foundation." />
+    <meta name="polyfly-base-path" content="./" />
+    <title>polyFly</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        background: #091528;
+        color: #fff7df;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body,
+      #app {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+      }
+
+      body {
+        overflow: hidden;
+      }
+
+      .polyfly-shell {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(180deg, #61c7ff 0%, #f7bd5d 72%, #293b45 100%);
+      }
+
+      .polyfly-overlay {
+        position: absolute;
+        left: clamp(1rem, 3vw, 2.5rem);
+        top: clamp(1rem, 3vw, 2rem);
+        max-width: 28rem;
+        padding: 1rem 1.15rem;
+        border: 1px solid rgb(255 255 255 / 24%);
+        border-radius: 1rem;
+        background: rgb(9 21 40 / 68%);
+        box-shadow: 0 1.5rem 4rem rgb(0 0 0 / 24%);
+        pointer-events: none;
+      }
+
+      .polyfly-overlay h1 {
+        margin: 0 0 0.35rem;
+        font-size: clamp(1.35rem, 4vw, 2.25rem);
+        letter-spacing: 0.02em;
+      }
+
+      .polyfly-overlay p {
+        margin: 0;
+        color: #ffe9bb;
+        line-height: 1.45;
+      }
+
+      canvas {
+        display: block;
+      }
+    </style>
+  </head>
+  <body>
+    <main id="app" class="polyfly-shell" aria-label="polyFly game viewport">
+      <noscript>polyFly needs JavaScript enabled to render the Three.js scene.</noscript>
+    </main>
+    <script type="module" src="./src/main.js"></script>
+  </body>
+</html>
