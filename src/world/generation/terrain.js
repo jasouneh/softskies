@@ -33,11 +33,21 @@ export function sampleTerrain(seed = WORLD_SEED, worldX = 0, worldZ = 0) {
     + terrace * 6
     + massif * (34 + ridges * 56);
 
-  const river = sampleRiver(seedHash, worldX, worldZ);
-  const riverCut = river.strength * (2.2 + massif * 4.5);
+  const slopeProxy = clamp(ridges * massif + Math.abs(smallHills) * 0.35);
+  const rawRiver = sampleRiver(seedHash, worldX, worldZ);
+  const lowlandFactor = (1 - smoothstep(0.12, 0.34, massif)) * (1 - smoothstep(32, 54, height));
+  const gentleBankFactor = 1 - smoothstep(0.3, 0.58, slopeProxy);
+  const riverStrength = rawRiver.strength * lowlandFactor * gentleBankFactor;
+  const bankStrength = rawRiver.bankStrength * lowlandFactor * gentleBankFactor;
+  const riverCut = bankStrength * 4.2 + riverStrength * 3.8;
   height -= riverCut;
 
-  const slopeProxy = clamp(ridges * massif + Math.abs(smallHills) * 0.35);
+  const river = {
+    ...rawRiver,
+    strength: riverStrength,
+    bankStrength,
+    isRiver: riverStrength > 0,
+  };
   const material = chooseMaterial({ height, massif, river, slopeProxy, plains });
 
   return {
@@ -47,6 +57,7 @@ export function sampleTerrain(seed = WORLD_SEED, worldX = 0, worldZ = 0) {
     riverStrength: river.strength,
     riverDistance: river.distance,
     riverWidth: river.width,
+    riverBankStrength: river.bankStrength,
     mountain: massif,
     slope: slopeProxy,
   };
@@ -125,7 +136,7 @@ function chooseMaterial({ height, massif, river, slopeProxy, plains }) {
     return MATERIAL_IDS.river;
   }
 
-  if (river.strength > 0.05) {
+  if (river.bankStrength > 0.18 || river.strength > 0.05) {
     return MATERIAL_IDS.sand;
   }
 

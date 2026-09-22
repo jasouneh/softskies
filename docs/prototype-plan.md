@@ -32,7 +32,8 @@ Start with small browser modules under `src/`; keep module APIs narrow so they c
 - `src/camera/chase-camera.js`: third-person camera rig that follows the phoenix with smoothing and collision-free altitude constraints later.
 - `src/world/chunk-coordinator.js`: maps player position to chunk keys, loads/unloads chunks, enforces memory caps, and schedules generation work.
 - `src/world/generation/terrain.js`: deterministic height/material source of truth from seed + world coordinates.
-- `src/world/generation/rivers.js`: deterministic decorative river curves/strips derived from seed and chunk coordinates.
+- `src/world/generation/rivers.js`: deterministic lowland river curves/strips derived from seed and chunk coordinates.
+- `src/world/generation/dressing.js`: deterministic prop placement for plains trees/houses and snow dead trees/igloos.
 - `src/world/mesh/terrain-mesh.js`: converts generated chunk samples into flat-shaded Three.js geometry and disposes it.
 - `src/atmosphere/sky.js`: simple palette interpolation, low-poly sun/moon meshes, fog color, and ambient/directional light updates.
 - `src/atmosphere/clouds.js`: later generated cloud layers/cloud sea; independent of terrain source data.
@@ -141,7 +142,7 @@ Keep the current structural checks and add focused tests as modules appear:
 ## Milestones
 
 1. **Foundation (landed):** source page, Three.js boundary, generated bundle, tests, Pages workflow, and this plan.
-2. **First playable slice (current):** renderer/loop modules, procedural phoenix, chase camera, pointer-lock mouse/WASD flight, bounded deterministic terrain chunks, plains/mountains/rivers, focused generation/streaming tests, and a lightweight day/night atmosphere.
+2. **First playable slice (current):** renderer/loop modules, procedural phoenix, chase camera, pointer-lock mouse/WASD flight, bounded deterministic terrain chunks, plains/mountains/lowland rivers, procedural chunk dressing, focused generation/streaming tests, and a lightweight day/night atmosphere.
 3. **Flight and world tuning:** tune speed/turn/camera feel, terrain scale, river readability, and draw-call/triangle budgets through browser smoke passes.
 4. **Cloud layer/cloud sea:** add deterministic generated cloud cells independent of terrain chunks.
 5. **Stylized night sky:** add cheap procedural stars/Milky Way styling driven by the existing night factor.
