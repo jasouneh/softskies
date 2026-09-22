@@ -1,17 +1,19 @@
 # polyFly
 
-polyFly is planned as a browser-based Three.js flight game for GitHub Pages. The player will watch and steer a procedural low-poly phoenix in third-person view while continuously flying through an infinite, bright polygon-styled world of plains, mountains, decorative rivers, and staged atmosphere effects.
+polyFly is a browser-based Three.js free-flight prototype for GitHub Pages. The player watches and steers a procedural low-poly phoenix in third-person view while continuously flying through an infinite-feeling, bright polygon-styled world of plains, mountains, decorative rivers, and a lightweight day/night sky.
 
 ## Current status
 
-This repository currently contains the maintainable project foundation, not the full playable prototype. It includes:
+This repository currently contains the first playable vertical slice. It includes:
 
 - a static source page (`index.html`) that loads native browser modules from `src/`;
-- a small Three.js foundation scene used to verify rendering integration;
-- a dependency-light Node build script that generates an ignored `dist/` site bundle;
-- source and bundle-shape validation tests;
-- a GitHub Pages deployment workflow; and
-- an implementation-ready prototype plan in [`docs/prototype-plan.md`](docs/prototype-plan.md).
+- a procedural low-poly phoenix with third-person chase camera framing;
+- pointer-lock mouse steering, WASD/arrow flight controls, and Shift boost;
+- deterministic chunked terrain streaming with explicit `MAX_CHUNKS` bounds and disposal hooks;
+- bright low-poly plains, stylized mountains, simple snow caps, and decorative river shading from procedural generation;
+- a lightweight day/night cycle with palette changes plus low-poly sun and moon markers;
+- a dependency-light Node build script that generates an ignored `dist/` static site bundle; and
+- source, deterministic generation, streaming, and bundle-shape validation tests.
 
 ## Intended v1 scope
 
@@ -37,8 +39,8 @@ node scripts/build.mjs
 # Build with the GitHub Pages project base path.
 BASE_PATH=/polyFly/ node scripts/build.mjs
 
-# Validate the source entry and generated bundle shape.
-node --test tests/source-entry.test.mjs
+# Validate source structure, deterministic generation, streaming, and bundle shape.
+node --test tests/source-entry.test.mjs tests/world-generation.test.mjs tests/chunk-coordinator.test.mjs
 node scripts/build.mjs && node --test tests/bundle-shape.test.mjs
 # or: npm run validate
 
@@ -49,15 +51,14 @@ node scripts/serve.mjs dist 4173
 
 ## Architecture direction
 
-`src/` is the source of truth for the browser app. `dist/` is generated output and should remain untracked. Gameplay systems should grow around deterministic world generation, bounded terrain chunk streaming, procedural art, and small browser-native modules before adopting heavier tooling. The current Three.js dependency is isolated behind `src/platform/three.js` so future bundling or vendoring can change one boundary instead of every gameplay module.
+`src/` is the source of truth for the browser app. `dist/` is generated output and should remain untracked. Gameplay systems grow around deterministic world generation, bounded terrain chunk streaming, procedural art, and small browser-native modules before adopting heavier tooling. The current Three.js dependency is isolated behind `src/platform/three.js` so future bundling or vendoring can change one boundary instead of every gameplay module.
 
 See [`docs/prototype-plan.md`](docs/prototype-plan.md) for module boundaries, data flow, chunk/memory budgets, test strategy, GitHub Pages base-path handling, and staged milestones from the first rendered scene through free-flight exploration.
 
 ## Roadmap
 
-1. Replace the foundation scene with a first scene module, renderer loop, and debug HUD.
-2. Add a procedural phoenix placeholder, chase camera, and mouse/WASD flight controls.
-3. Implement deterministic chunk generation and bounded streaming around the player.
-4. Add terrain materials, mountains with snow bands, and decorative rivers.
-5. Stage atmosphere: simple day/night palettes first, then clouds/cloud sea, then stylized stars later.
-6. Harden performance budgets, browser smoke checks, and GitHub Pages deployment.
+1. Tune flight feel, camera smoothing, and low-poly phoenix silhouettes from browser playtesting.
+2. Add lightweight deterministic cloud layers or a cloud sea without coupling them to terrain chunks.
+3. Expand terrain material bands, including more deliberate snow bands and cliff accents.
+4. Add a procedural stylized stars/Milky Way layer driven by the existing night factor.
+5. Harden performance budgets, browser smoke checks, and GitHub Pages deployment.

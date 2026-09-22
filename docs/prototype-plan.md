@@ -37,6 +37,7 @@ Start with small browser modules under `src/`; keep module APIs narrow so they c
 - `src/atmosphere/sky.js`: simple palette interpolation, low-poly sun/moon meshes, fog color, and ambient/directional light updates.
 - `src/atmosphere/clouds.js`: later generated cloud layers/cloud sea; independent of terrain source data.
 - `src/atmosphere/stars.js`: later stylized star/Milky Way dome; driven by a simple night factor, not full astronomy.
+- `src/ui/hud.js`: lightweight in-browser instructions and debug stats for flight tuning and streaming budgets.
 - `src/config/*.js`: tunable constants for seed, chunk size, draw radius, speed, palette, and performance budgets.
 
 ## Runtime data flow
@@ -139,11 +140,9 @@ Keep the current structural checks and add focused tests as modules appear:
 
 ## Milestones
 
-1. **Foundation (current):** source page, Three.js boundary, generated bundle, tests, Pages workflow, and this plan.
-2. **First rendered scene:** move the foundation scene into renderer/scene modules, add resize/disposal tests, and keep visual scope minimal.
-3. **Phoenix + chase camera:** procedural phoenix placeholder, stable third-person framing, and idle wing/tail motion.
-4. **Input + free flight:** pointer lock, mouse/WASD intents, always-flying controller, speed/turn tuning, and debug readout.
-5. **Deterministic terrain chunks:** seed/noise functions, chunk mesh generation, active radius loading, eviction, and seam tests.
-6. **Exploration world dressing:** mountains, snow bands, plains palette, decorative rivers, and horizon fog tuned for low-poly style.
-7. **Atmosphere slice:** simple day/night phase with sun/moon colors; add cloud layer only after terrain streaming is stable.
-8. **Pages hardening:** production base-path smoke check, performance budget review, README screenshots/GIF only if generated or explicitly licensed later.
+1. **Foundation (landed):** source page, Three.js boundary, generated bundle, tests, Pages workflow, and this plan.
+2. **First playable slice (current):** renderer/loop modules, procedural phoenix, chase camera, pointer-lock mouse/WASD flight, bounded deterministic terrain chunks, plains/mountains/rivers, focused generation/streaming tests, and a lightweight day/night atmosphere.
+3. **Flight and world tuning:** tune speed/turn/camera feel, terrain scale, river readability, and draw-call/triangle budgets through browser smoke passes.
+4. **Cloud layer/cloud sea:** add deterministic generated cloud cells independent of terrain chunks.
+5. **Stylized night sky:** add cheap procedural stars/Milky Way styling driven by the existing night factor.
+6. **Pages hardening:** production base-path smoke check, performance budget review, README screenshots/GIF only if generated or explicitly licensed later.

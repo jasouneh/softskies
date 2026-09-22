@@ -8,7 +8,7 @@ This file is the project's committed home for project-intrinsic agent knowledge:
 - Preserve bounded world streaming. New terrain/world systems should enforce chunk count/memory caps and dispose geometries/materials when chunks unload.
 - Keep dependencies and tooling restrained. The foundation uses Node scripts plus a pinned Three.js module boundary in `src/platform/three.js`; add heavier packages only when the benefit is clear and documented.
 - Maintain GitHub Pages compatibility: static files only, no server runtime, no root-relative asset paths without `BASE_PATH`, and publish generated `dist/` via the Pages workflow artifact.
-- Before handing off changes that affect source/build shape, run `node --test tests/source-entry.test.mjs` and `node scripts/build.mjs && node --test tests/bundle-shape.test.mjs` (or the matching package scripts where npm is available).
+- Before handing off changes that affect source/build shape, run `node --test tests/source-entry.test.mjs tests/world-generation.test.mjs tests/chunk-coordinator.test.mjs` and `node scripts/build.mjs && node --test tests/bundle-shape.test.mjs` (or the matching package scripts where npm is available).
 - Architecture and staged implementation details live in `docs/prototype-plan.md`; update that plan when module boundaries, streaming budgets, or generation rules materially change.
 
 ## Maintaining this file
