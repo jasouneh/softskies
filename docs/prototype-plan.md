@@ -35,6 +35,8 @@ Start with small browser modules under `src/`; keep module APIs narrow so they c
 - `src/world/generation/rivers.js`: deterministic lowland river curves/strips derived from seed and chunk coordinates.
 - `src/world/generation/dressing.js`: deterministic prop placement for plains trees/houses and snow dead trees/igloos.
 - `src/world/mesh/terrain-mesh.js`: converts generated chunk samples into flat-shaded Three.js geometry and disposes it.
+- `src/world/mesh/dressing-geometry.js`: pure procedural prop geometry/vertex-color data for trees, houses, dead trees, and igloos; keep winding testable without WebGL.
+- `src/world/mesh/dressing-mesh.js`: wraps dressing geometry data in flat-shaded Three.js buffers and disposes it.
 - `src/atmosphere/sky.js`: simple palette interpolation, low-poly sun/moon meshes, fog color, and ambient/directional light updates.
 - `src/atmosphere/clouds.js`: later generated cloud layers/cloud sea; independent of terrain source data.
 - `src/atmosphere/stars.js`: later stylized star/Milky Way dome; driven by a simple night factor, not full astronomy.
@@ -128,6 +130,7 @@ Keep the current structural checks and add focused tests as modules appear:
 - Generator determinism tests: same seed/coordinates produce identical heights/materials/rivers; different seeds differ.
 - Chunk seam tests: adjacent chunks produce identical shared border heights.
 - Streaming tests: loaded chunk keys stay within `MAX_CHUNKS` and evicted chunks call disposal hooks.
+- Dressing geometry tests: generated prop faces that rely on front-side rendering keep outward triangle winding.
 - Input tests: key/pointer snapshots map to stable normalized intents.
 - Browser smoke tests can be added later only if the dependency cost is justified.
 
