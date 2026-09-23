@@ -52,10 +52,12 @@ test("phoenix source stays procedural and wires bounded fire and boost wind effe
   ]);
 
   assert.match(source, /phoenix\.update\(dt, playableElapsed, updatedPose, \{ boost: intent\.boost \}\)/);
-  assert.match(phoenix, /FIRE_PARTICLE_COUNT = 48/);
+  assert.match(phoenix, /FIRE_PARTICLE_COUNT = 72/);
   assert.match(phoenix, /new THREE\.InstancedMesh\(geometry, material, FIRE_PARTICLE_COUNT\)/);
   assert.match(phoenix, /bounded procedural phoenix fire particle trail/);
+  assert.match(phoenix, /layered body flame facets/);
+  assert.match(phoenix, /low-poly primary feather/);
   assert.match(phoenix, /boost wingtip wind animation/);
-  assert.match(phoenix, /WIND_STREAKS_PER_SIDE = 4/);
+  assert.match(phoenix, /WIND_STREAKS_PER_SIDE = 5/);
   assert.doesNotMatch(phoenix, /https?:\/\//);
 });

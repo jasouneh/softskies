@@ -151,15 +151,19 @@ function createPhoenixThumbnailDataUri() {
   const svg = `
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 72" role="img" aria-label="Low-poly phoenix thumbnail">
       <rect width="96" height="72" rx="12" fill="#173142"/>
-      <polygon points="11,47 39,30 44,43 21,58" fill="#b85d32"/>
-      <polygon points="85,47 57,30 52,43 75,58" fill="#d87339"/>
-      <polygon points="22,50 43,39 48,47 33,65" fill="#f0a642"/>
-      <polygon points="74,50 53,39 48,47 63,65" fill="#ffbe58"/>
-      <polygon points="48,14 61,38 48,53 35,38" fill="#f29c38"/>
-      <polygon points="48,14 55,33 48,53 41,33" fill="#ffd166"/>
-      <polygon points="36,35 48,25 60,35 48,43" fill="#f07f32"/>
-      <polygon points="48,8 55,21 48,18 41,21" fill="#fff0a8"/>
-      <polygon points="42,57 48,46 54,57 48,68" fill="#db5a2f"/>
+      <polygon points="6,45 39,27 43,39 16,61" fill="#8f2b2e"/>
+      <polygon points="90,45 57,27 53,39 80,61" fill="#b93635"/>
+      <polygon points="14,50 38,36 47,45 27,66" fill="#db6b32"/>
+      <polygon points="82,50 58,36 49,45 69,66" fill="#f07f32"/>
+      <polygon points="24,35 43,29 48,42 31,51" fill="#ffd166"/>
+      <polygon points="72,35 53,29 48,42 65,51" fill="#ffe07a"/>
+      <polygon points="48,13 62,35 55,50 48,58 41,50 34,35" fill="#f47a2f"/>
+      <polygon points="48,13 55,34 48,58 41,34" fill="#ffd166"/>
+      <polygon points="38,35 48,24 58,35 48,43" fill="#c0522d"/>
+      <polygon points="48,7 55,20 50,18 48,28 46,18 41,20" fill="#fff0a8"/>
+      <polygon points="40,57 46,45 48,70" fill="#d14375"/>
+      <polygon points="56,57 50,45 48,70" fill="#7b1724"/>
+      <polygon points="46,58 48,44 52,58 49,70" fill="#ffbd4a"/>
     </svg>
   `.trim();
   return `data:image/svg+xml,${encodeURIComponent(svg)}`;
