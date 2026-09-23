@@ -123,7 +123,13 @@ export function createPolyFlyShell({ mountNode = document.body } = {}) {
         const updatedPose = controller.getPose();
         terrainHeight = sampleTerrain(WORLD_SEED, updatedPose.position.x, updatedPose.position.z).height;
         chunks.update(updatedPose.position);
-        phoenix.update(dt, playableElapsed, updatedPose, { boost: intent.boost });
+        phoenix.update(dt, playableElapsed, updatedPose, {
+          boost: intent.boost,
+          pitch: intent.pitch,
+          roll: intent.roll,
+          mousePitchDelta: intent.mousePitchDelta,
+          mouseYawDelta: intent.mouseYawDelta,
+        });
         chaseCamera.update(dt, updatedPose, { boost: intent.boost });
         atmosphereState = atmosphere.update(playableElapsed, { camera });
         cloudState = cloudLayer.update({

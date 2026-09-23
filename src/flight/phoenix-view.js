@@ -107,6 +107,9 @@ export function createPhoenixView() {
   group.scale.setScalar(1.18);
 
   let windIntensity = 0;
+  let climbResponse = 0;
+  let turnResponse = 0;
+  let wingBeatPhase = 0;
 
   return {
     object: group,
@@ -115,12 +118,31 @@ export function createPhoenixView() {
       group.quaternion.copy(pose.quaternion);
 
       const boosting = Boolean(effects.boost);
-      const flapRate = pose.speed > 58 ? 10.5 : 7.2;
-      const flap = Math.sin(elapsed * flapRate) * 0.42 + Math.sin(elapsed * flapRate * 0.5) * 0.12;
-      leftWing.root.rotation.z = 0.18 + flap;
-      rightWing.root.rotation.z = -0.18 - flap;
-      leftWing.tip.rotation.z = -0.16 - flap * 0.35;
-      rightWing.tip.rotation.z = 0.16 + flap * 0.35;
+      const climbTarget = getWingClimbTarget(pose, effects);
+      const turnTarget = getWingTurnTarget(pose, effects);
+      const responseBlend = 1 - Math.exp(-dt * 8.5);
+      climbResponse += (climbTarget - climbResponse) * responseBlend;
+      turnResponse += (turnTarget - turnResponse) * responseBlend;
+
+      const turnMagnitude = Math.abs(turnResponse);
+      const actionIntensity = clamp(climbResponse * 0.95 + turnMagnitude * 0.72, 0, 1);
+      if (actionIntensity > 0.01) {
+        wingBeatPhase += dt * (5.1 + climbResponse * 2.8 + turnMagnitude * 1.4 + (boosting ? 0.35 : 0));
+      }
+      const wingBeat = actionIntensity > 0.01
+        ? Math.sin(wingBeatPhase) * (0.08 + climbResponse * 0.32 + turnMagnitude * 0.12) * actionIntensity
+        : 0;
+      const climbLift = climbResponse * 0.24;
+      const turnLean = turnResponse * 0.24;
+
+      leftWing.root.rotation.z = 0.16 + climbLift + wingBeat - turnLean;
+      rightWing.root.rotation.z = -0.16 - climbLift - wingBeat - turnLean;
+      leftWing.root.rotation.x = -0.02 - climbResponse * 0.08 + turnMagnitude * 0.035;
+      rightWing.root.rotation.x = -0.02 - climbResponse * 0.08 + turnMagnitude * 0.035;
+      leftWing.tip.rotation.z = -0.14 - (climbLift + wingBeat) * 0.45 - turnLean * 0.28;
+      rightWing.tip.rotation.z = 0.14 + (climbLift + wingBeat) * 0.45 - turnLean * 0.28;
+      leftWing.tip.rotation.x = climbResponse * 0.08 + turnResponse * 0.07;
+      rightWing.tip.rotation.x = climbResponse * 0.08 - turnResponse * 0.07;
 
       tail.root.rotation.y = Math.sin(elapsed * 2.3) * 0.08 + pose.bankAmount * 0.16;
       tail.root.rotation.x = Math.sin(elapsed * 3.4) * 0.05;
@@ -142,6 +164,20 @@ export function createPhoenixView() {
       disposeObjectResources(group);
     },
   };
+}
+
+function getWingClimbTarget(pose, effects) {
+  const climbFromFlightPath = clamp(((pose.forward?.y ?? 0) - 0.045) / 0.32, 0, 1);
+  const keyboardClimb = Math.max(0, effects.pitch ?? 0) * 0.78;
+  const mouseClimb = Math.max(0, effects.mousePitchDelta ?? 0) * 6;
+  return clamp(Math.max(climbFromFlightPath, keyboardClimb, mouseClimb), 0, 1);
+}
+
+function getWingTurnTarget(pose, effects) {
+  const bankTurn = clamp(pose.bankAmount ?? 0, -1, 1) * 0.78;
+  const keyboardTurn = clamp(effects.roll ?? 0, -1, 1) * 0.26;
+  const mouseTurn = clamp(effects.mouseYawDelta ?? 0, -0.18, 0.18) * 1.25;
+  return clamp(bankTurn + keyboardTurn + mouseTurn, -1, 1);
 }
 
 function createPhoenixMaterials() {
