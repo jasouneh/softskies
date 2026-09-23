@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Playable browser-based low-poly phoenix flight prototype for GitHub Pages.",
+  "description": "Relaxing low-poly flight sim for GitHub Pages.",
   "scripts": {
     "dev": "node scripts/serve.mjs . 5173",
     "build": "node scripts/build.mjs",
