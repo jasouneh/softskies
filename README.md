@@ -9,7 +9,7 @@ This repository currently contains the first playable vertical slice. It include
 - a static source page (`index.html`) that loads native browser modules from `src/`;
 - a procedural low-poly phoenix with third-person chase camera framing;
 - pointer-lock mouse steering, WASD/arrow flight controls, Shift boost, and Space pause/resume;
-- a small mouse-revealed bottom-left UI with pause and avatar selection hooks;
+- a compact mouse-revealed bottom-left UI with fixed-width Pause/Play control and an avatar thumbnail menu hook;
 - deterministic chunked terrain streaming with explicit `MAX_CHUNKS` bounds and disposal hooks;
 - bright low-poly plains, stylized mountains, simple snow caps, valley-following lowland river channels, and procedural trees/houses/dead trees/igloos from deterministic generation;
 - a lightweight day/night cycle with palette changes plus low-poly sun and moon markers;

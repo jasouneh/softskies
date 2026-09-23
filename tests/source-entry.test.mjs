@@ -16,6 +16,21 @@ test("source page points at the native browser module entry", async () => {
   assert.doesNotMatch(html, /dist\//, "source page should not reference generated output");
 });
 
+test("hud exposes compact pause/play and avatar thumbnail menu hooks", async () => {
+  const [html, hud] = await Promise.all([
+    readProjectFile("index.html"),
+    readProjectFile("src/ui/hud.js"),
+  ]);
+
+  assert.match(html, /background: rgb\(24 42 35 \/ 28%\)/);
+  assert.match(html, /\.polyfly-pause-button[\s\S]*width: 4\.25rem/);
+  assert.match(hud, /textContent = paused \? "Play" : "Pause"/);
+  assert.match(hud, /data-action="avatar-trigger"/);
+  assert.match(hud, /polyfly-avatar-thumb/);
+  assert.doesNotMatch(hud, /<select/);
+  assert.doesNotMatch(hud, /Resume/);
+});
+
 test("source entry imports Three.js through the project boundary and wires clouds", async () => {
   const source = await readProjectFile("src/main.js");
   const threeBoundary = await readProjectFile("src/platform/three.js");
