@@ -47,104 +47,51 @@
         left: clamp(0.75rem, 2vw, 1.4rem);
         bottom: clamp(0.75rem, 2vw, 1.4rem);
         z-index: 2;
-        width: min(20rem, calc(100vw - 1.5rem));
-        padding: 0.72rem;
-        border: 1px solid rgb(255 255 255 / 20%);
-        border-radius: 0.95rem;
-        background: rgb(24 42 35 / 62%);
-        box-shadow: 0 1rem 2.75rem rgb(0 0 0 / 20%);
-        backdrop-filter: blur(0.65rem);
+        display: flex;
+        align-items: center;
+        gap: 0.55rem;
+        width: max-content;
+        max-width: calc(100vw - 1.5rem);
+        padding: 0.5rem;
+        border: 1px solid rgb(255 255 255 / 18%);
+        border-radius: 0.82rem;
+        background: rgb(24 42 35 / 45%);
+        box-shadow: 0 0.75rem 2rem rgb(0 0 0 / 16%);
+        backdrop-filter: blur(0.6rem);
         pointer-events: auto;
       }
 
-      .polyfly-ui__status,
-      .polyfly-ui__actions {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 0.55rem;
-      }
-
-      .polyfly-ui__status {
-        margin-bottom: 0.5rem;
-        color: #fff7df;
-        font-size: 0.88rem;
-      }
-
-      .polyfly-ui__status span {
-        color: #cceec0;
-      }
-
-      .polyfly-ui__actions button,
-      .polyfly-ui__actions select {
-        border: 1px solid rgb(255 255 255 / 24%);
+      .polyfly-ui button,
+      .polyfly-ui select {
+        border: 1px solid rgb(255 255 255 / 22%);
         border-radius: 0.55rem;
-        background: rgb(255 247 223 / 16%);
+        background: rgb(255 247 223 / 18%);
         color: #fff7df;
         font: inherit;
       }
 
-      .polyfly-ui__actions button {
+      .polyfly-ui button {
+        min-width: 4.8rem;
         padding: 0.4rem 0.58rem;
         cursor: pointer;
       }
 
-      .polyfly-ui__actions label {
+      .polyfly-ui label {
         display: flex;
         align-items: center;
         gap: 0.35rem;
         color: #ffe9bb;
         font-size: 0.78rem;
+        white-space: nowrap;
       }
 
-      .polyfly-ui__actions select {
+      .polyfly-ui select {
         max-width: 7.5rem;
         padding: 0.36rem 0.42rem;
       }
 
-      .polyfly-stats {
-        display: grid;
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-        gap: 0.32rem;
-        margin: 0.55rem 0 0.4rem;
-      }
-
-      .polyfly-stats div {
-        padding: 0.35rem 0.38rem;
-        border: 1px solid rgb(255 255 255 / 12%);
-        border-radius: 0.5rem;
-        background: rgb(255 255 255 / 8%);
-      }
-
-      .polyfly-stats dt {
-        font-size: 0.58rem;
-        color: #bdeaff;
-        text-transform: uppercase;
-        letter-spacing: 0.08em;
-      }
-
-      .polyfly-stats dd {
-        overflow: hidden;
-        margin: 0.08rem 0 0;
-        color: #fff7df;
-        font-size: 0.72rem;
-        font-weight: 700;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-      }
-
-      .polyfly-hint {
-        margin: 0;
-        color: #ffe9bb;
-        font-size: 0.76rem;
-      }
-
-      .is-pointer-locked .polyfly-ui {
-        opacity: 0.7;
-      }
-
       .is-paused .polyfly-ui {
-        background: rgb(45 33 31 / 72%);
+        background: rgb(45 33 31 / 45%);
       }
 
       canvas,

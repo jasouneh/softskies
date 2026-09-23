@@ -12,35 +12,16 @@ export function createHud(root, {
   overlay.className = "polyfly-ui";
   overlay.hidden = true;
   overlay.innerHTML = `
-    <div class="polyfly-ui__status">
-      <strong>polyFly</strong>
-      <span data-stat="pause-state">Flying</span>
-    </div>
-    <div class="polyfly-ui__actions">
-      <button type="button" data-action="pause">Pause</button>
-      <label>
-        Avatar
-        <select data-action="avatar"></select>
-      </label>
-    </div>
-    <dl class="polyfly-stats" aria-label="flight status">
-      <div><dt>speed</dt><dd data-stat="speed">--</dd></div>
-      <div><dt>alt</dt><dd data-stat="altitude">--</dd></div>
-      <div><dt>chunks</dt><dd data-stat="chunks">--</dd></div>
-      <div><dt>time</dt><dd data-stat="time">--</dd></div>
-    </dl>
-    <p class="polyfly-hint" data-stat="lock">Click the sky to lock pointer · Space pauses</p>
+    <button type="button" data-action="pause">Pause</button>
+    <label>
+      <span>Avatar</span>
+      <select data-action="avatar" aria-label="Avatar"></select>
+    </label>
   `;
   root.append(overlay);
 
   const pauseButton = overlay.querySelector('[data-action="pause"]');
   const avatarSelect = overlay.querySelector('[data-action="avatar"]');
-  const pauseState = overlay.querySelector('[data-stat="pause-state"]');
-  const speed = overlay.querySelector('[data-stat="speed"]');
-  const altitude = overlay.querySelector('[data-stat="altitude"]');
-  const chunks = overlay.querySelector('[data-stat="chunks"]');
-  const time = overlay.querySelector('[data-stat="time"]');
-  const lock = overlay.querySelector('[data-stat="lock"]');
 
   for (const avatar of avatars) {
     const option = document.createElement("option");
@@ -57,7 +38,6 @@ export function createHud(root, {
   }
 
   function setPaused(paused) {
-    pauseState.textContent = paused ? "Paused" : "Flying";
     pauseButton.textContent = paused ? "Resume" : "Pause";
     root.classList.toggle("is-paused", paused);
   }
@@ -78,17 +58,8 @@ export function createHud(root, {
   return {
     show,
     setPaused,
-    update({ pose, terrainHeight, chunkStats, atmosphere, pointerLocked, paused = false }) {
+    update({ pointerLocked, paused = false }) {
       setPaused(paused);
-      speed.textContent = paused ? "paused" : `${Math.round(pose.speed)} u/s`;
-      altitude.textContent = `${Math.round(pose.position.y - terrainHeight)}`;
-      chunks.textContent = `${chunkStats.loadedCount}/${chunkStats.maxChunks} · ${chunkStats.queuedCount}q`;
-      time.textContent = atmosphere.dayFactor > 0.5 ? "day" : "night";
-      lock.textContent = paused
-        ? "Paused · Space resumes"
-        : pointerLocked
-          ? "Pointer locked · Space pauses"
-          : "Click sky to fly · Space pauses";
       root.classList.toggle("is-pointer-locked", pointerLocked);
     },
     dispose() {
