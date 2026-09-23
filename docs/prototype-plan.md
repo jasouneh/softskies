@@ -28,15 +28,21 @@ Start with small browser modules under `src/`; keep module APIs narrow so they c
 - `src/engine/renderer.js`: creates the Three.js renderer, scene, camera root, color management, resize handling, and render pass order.
 - `src/input/controls.js`: converts pointer lock/mouse movement and keyboard state into normalized flight intents (`pitch`, `yaw`, `roll`, `throttle`, `boost`).
 - `src/flight/phoenix-controller.js`: integrates velocity/orientation for an always-flying avatar. It should not create meshes.
-- `src/flight/phoenix-view.js`: procedural low-poly phoenix mesh, wing/tail animation parameters, and material palette.
+- `src/flight/phoenix-view.js`: procedural low-poly phoenix mesh, wing/tail animation parameters, bounded fire/wind effects, and material palette.
 - `src/camera/chase-camera.js`: third-person camera rig that follows the phoenix with smoothing and collision-free altitude constraints later.
 - `src/world/chunk-coordinator.js`: maps player position to chunk keys, loads/unloads chunks, enforces memory caps, and schedules generation work.
+- `src/world/generation/base-terrain.js`: river-free base height fields and terrain grade helpers shared by terrain and river routing.
 - `src/world/generation/terrain.js`: deterministic height/material source of truth from seed + world coordinates.
-- `src/world/generation/rivers.js`: deterministic decorative river curves/strips derived from seed and chunk coordinates.
+- `src/world/generation/rivers.js`: deterministic lowland river curves/strips derived from seed and chunk coordinates, routed through suitable valleys before terrain material projection.
+- `src/world/generation/dressing.js`: deterministic prop placement for plains trees/houses and snow dead trees/igloos.
 - `src/world/mesh/terrain-mesh.js`: converts generated chunk samples into flat-shaded Three.js geometry and disposes it.
+- `src/world/mesh/dressing-geometry.js`: pure procedural prop geometry/vertex-color data for trees, houses, dead trees, and igloos; keep winding testable without WebGL.
+- `src/world/mesh/dressing-mesh.js`: wraps dressing geometry data in flat-shaded Three.js buffers and disposes it.
 - `src/atmosphere/sky.js`: simple palette interpolation, low-poly sun/moon meshes, fog color, and ambient/directional light updates.
-- `src/atmosphere/clouds.js`: later generated cloud layers/cloud sea; independent of terrain source data.
+- `src/atmosphere/cloud-cells.js`: deterministic large cloud-cell and puff placement, independent of terrain source data.
+- `src/atmosphere/clouds.js`: bounded low-poly generated cloud layer mesh/instances, with room to expand into a cloud sea later.
 - `src/atmosphere/stars.js`: later stylized star/Milky Way dome; driven by a simple night factor, not full astronomy.
+- `src/ui/hud.js`: lightweight in-browser instructions and debug stats for flight tuning and streaming budgets.
 - `src/config/*.js`: tunable constants for seed, chunk size, draw radius, speed, palette, and performance budgets.
 
 ## Runtime data flow
@@ -80,7 +86,7 @@ Chunk keys are `floor(worldX / CHUNK_SIZE), floor(worldZ / CHUNK_SIZE)`. Neighbo
 
 - Input stores raw keyboard/pointer state and emits normalized intents only.
 - Flight controller owns motion: forward speed baseline, pitch/yaw/roll response, banking visual hints, altitude floor above terrain later, and gentle damping.
-- Phoenix view owns visuals: procedural body, wings, tail flames/feathers, palette, and animation from controller state.
+- Phoenix view owns visuals: procedural body, wings, tail flames/feathers, bounded fire trail and boost wingtip wind effects, palette, and animation from controller state.
 - Chase camera owns framing: offset behind/above the phoenix, smoothing, field-of-view changes for boost, and no gameplay decisions.
 - Terrain queries should be read-only for flight. Do not make terrain chunks depend on phoenix mesh state.
 
@@ -99,7 +105,7 @@ Stage atmosphere in layers:
 1. **Palette sky:** background/fog/light colors interpolate over a simple normalized day phase.
 2. **Sun/moon markers:** low-poly discs or simple meshes parented to a sky rig; no true astronomy.
 3. **Terrain material bands:** plains, mountain rock, snow caps/bands, and river colors from generated material IDs.
-4. **Cloud layer/cloud sea:** generated billboard/mesh clusters with deterministic placement by large cloud cells; keep independent from terrain chunks.
+4. **Cloud layer/cloud sea:** generated billboard/mesh clusters with deterministic placement by large cloud cells; keep independent from terrain chunks. The v1 layer uses bounded low-poly puff clusters and can expand toward denser cloud seas later.
 5. **Stars/Milky Way:** stylized point/dome layer enabled by night factor. Keep data procedural and cheap; avoid high-resolution textures unless a later decision allows assets.
 
 Use flat shading, limited palettes, and geometry silhouettes before textures. Prefer material reuse and instancing where it reduces draw calls without obscuring simple code.
@@ -126,7 +132,9 @@ Keep the current structural checks and add focused tests as modules appear:
 - Generator determinism tests: same seed/coordinates produce identical heights/materials/rivers; different seeds differ.
 - Chunk seam tests: adjacent chunks produce identical shared border heights.
 - Streaming tests: loaded chunk keys stay within `MAX_CHUNKS` and evicted chunks call disposal hooks.
+- Dressing geometry tests: generated prop faces that rely on front-side rendering keep outward triangle winding.
 - Input tests: key/pointer snapshots map to stable normalized intents.
+- Cloud generation tests: default seed/view produces visible bounded puffs, remains deterministic, and is seed-sensitive.
 - Browser smoke tests can be added later only if the dependency cost is justified.
 
 ## GitHub Pages base-path handling
@@ -139,11 +147,9 @@ Keep the current structural checks and add focused tests as modules appear:
 
 ## Milestones
 
-1. **Foundation (current):** source page, Three.js boundary, generated bundle, tests, Pages workflow, and this plan.
-2. **First rendered scene:** move the foundation scene into renderer/scene modules, add resize/disposal tests, and keep visual scope minimal.
-3. **Phoenix + chase camera:** procedural phoenix placeholder, stable third-person framing, and idle wing/tail motion.
-4. **Input + free flight:** pointer lock, mouse/WASD intents, always-flying controller, speed/turn tuning, and debug readout.
-5. **Deterministic terrain chunks:** seed/noise functions, chunk mesh generation, active radius loading, eviction, and seam tests.
-6. **Exploration world dressing:** mountains, snow bands, plains palette, decorative rivers, and horizon fog tuned for low-poly style.
-7. **Atmosphere slice:** simple day/night phase with sun/moon colors; add cloud layer only after terrain streaming is stable.
-8. **Pages hardening:** production base-path smoke check, performance budget review, README screenshots/GIF only if generated or explicitly licensed later.
+1. **Foundation (landed):** source page, Three.js boundary, generated bundle, tests, Pages workflow, and this plan.
+2. **First playable slice (current):** renderer/loop modules, procedural phoenix, chase camera, pointer-lock mouse/WASD flight, bounded deterministic terrain chunks, plains/mountains/lowland rivers, procedural chunk dressing, focused generation/streaming/cloud tests, a lightweight day/night atmosphere, and the first bounded deterministic cloud layer.
+3. **Flight and world tuning:** tune speed/turn/camera feel, terrain scale, river/cloud readability, and draw-call/triangle budgets through browser smoke passes.
+4. **Cloud layer/cloud sea expansion:** tune/expand deterministic generated cloud cells independent of terrain chunks.
+5. **Stylized night sky:** add cheap procedural stars/Milky Way styling driven by the existing night factor.
+6. **Pages hardening:** production base-path smoke check, performance budget review, README screenshots/GIF only if generated or explicitly licensed later.

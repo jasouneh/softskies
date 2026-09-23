@@ -1,10 +1,11 @@
-import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
+import { mkdir, readFile, readdir, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 const rootUrl = new URL("../", import.meta.url);
 const distUrl = new URL("dist/", rootUrl);
 const assetsUrl = new URL("assets/", distUrl);
 const sourceHtmlUrl = new URL("index.html", rootUrl);
+const sourceRootUrl = new URL("src/", rootUrl);
 const sourceEntryUrl = new URL("src/main.js", rootUrl);
 const threeBoundaryUrl = new URL("src/platform/three.js", rootUrl);
 
@@ -22,11 +23,13 @@ await rm(distUrl, { recursive: true, force: true });
 await mkdir(assetsUrl, { recursive: true });
 await writeFile(new URL("index.html", distUrl), distHtml, "utf8");
 await writeFile(new URL("polyfly.js", assetsUrl), bundleSource, "utf8");
+const copiedModules = await copySourceModules(sourceRootUrl, assetsUrl, { skip: new Set(["main.js"]) });
 await writeFile(
   new URL("build-manifest.json", distUrl),
   `${JSON.stringify({
     sourceEntry: "src/main.js",
     bundle: "assets/polyfly.js",
+    copiedModules,
     basePath,
     externalModules: [threeModuleUrl],
   }, null, 2)}\n`,
@@ -41,6 +44,32 @@ function extractThreeModuleUrl(source) {
     throw new Error("Could not find the pinned Three.js module URL in src/platform/three.js.");
   }
   return match.groups.url;
+}
+
+async function copySourceModules(sourceDirUrl, outputDirUrl, { relativeDir = "", skip = new Set() } = {}) {
+  const copied = [];
+  const entries = await readdir(sourceDirUrl, { withFileTypes: true });
+
+  for (const entry of entries) {
+    const relativePath = path.posix.join(relativeDir, entry.name);
+    const sourceUrl = new URL(`${entry.name}${entry.isDirectory() ? "/" : ""}`, sourceDirUrl);
+    const outputUrl = new URL(`${entry.name}${entry.isDirectory() ? "/" : ""}`, outputDirUrl);
+
+    if (entry.isDirectory()) {
+      await mkdir(outputUrl, { recursive: true });
+      copied.push(...await copySourceModules(sourceUrl, outputUrl, { relativeDir: relativePath, skip }));
+      continue;
+    }
+
+    if (skip.has(relativePath)) {
+      continue;
+    }
+
+    await writeFile(outputUrl, await readFile(sourceUrl, "utf8"), "utf8");
+    copied.push(relativePath);
+  }
+
+  return copied.sort();
 }
 
 function createBundleSource(source, threeModuleUrl) {
