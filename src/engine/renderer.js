@@ -8,7 +8,7 @@ export function createRenderer({ root, clearColor = 0x7bd7ff } = {}) {
   const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
   renderer.setClearColor(clearColor, 1);
-  renderer.domElement.className = "polyfly-canvas";
+  renderer.domElement.className = "softskies-canvas";
   if (THREE.SRGBColorSpace) {
     renderer.outputColorSpace = THREE.SRGBColorSpace;
   }
@@ -16,7 +16,7 @@ export function createRenderer({ root, clearColor = 0x7bd7ff } = {}) {
   root.append(renderer.domElement);
 
   const scene = new THREE.Scene();
-  scene.name = "polyFly playable scene";
+  scene.name = "SoftSkies playable scene";
   scene.background = new THREE.Color(clearColor);
   scene.fog = new THREE.Fog(0xbfeeff, 160, 760);
 

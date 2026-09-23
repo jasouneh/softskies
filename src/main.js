@@ -25,10 +25,10 @@ import {
   disposeTerrainMaterialPalette,
 } from "./world/mesh/terrain-mesh.js";
 
-export function createPolyFlyShell({ mountNode = document.body } = {}) {
+export function createSoftSkiesShell({ mountNode = document.body } = {}) {
   const root = document.createElement("section");
-  root.className = "polyfly-shell";
-  root.setAttribute("data-polyfly", "playable-prototype");
+  root.className = "softskies-shell";
+  root.setAttribute("data-softskies", "playable-prototype");
   root.dataset.threeRevision = THREE.REVISION ?? "0.170.0";
   mountNode.replaceChildren(root);
 
@@ -189,13 +189,13 @@ function isUiControl(target) {
   return target.closest("button, select, input, textarea, [contenteditable='true']") !== null;
 }
 
-export function mountPolyFlyShell() {
+export function mountSoftSkiesShell() {
   const mountNode = document.querySelector("#app") ?? document.body;
-  return createPolyFlyShell({ mountNode });
+  return createSoftSkiesShell({ mountNode });
 }
 
 if (typeof window !== "undefined") {
   window.addEventListener("DOMContentLoaded", () => {
-    mountPolyFlyShell();
+    mountSoftSkiesShell();
   }, { once: true });
 }

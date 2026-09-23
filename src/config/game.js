@@ -1,4 +1,4 @@
-export const WORLD_SEED = "polyfly-v1-launch";
+export const WORLD_SEED = "softskies-v1-launch";
 
 export const WORLD_CONFIG = Object.freeze({
   chunkSize: 192,

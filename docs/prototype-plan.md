@@ -1,4 +1,4 @@
-# polyFly prototype plan
+# SoftSkies prototype plan
 
 This plan turns the foundation into the first playable low-poly phoenix flight prototype without adding a heavy asset pipeline or theme-specific systems that do not serve v1.
 
@@ -128,7 +128,7 @@ If a feature needs workers, texture generation, or more dependencies, document t
 Keep the current structural checks and add focused tests as modules appear:
 
 - Source entry test: `index.html` loads `src/main.js` as a native module and does not point at `dist/`.
-- Bundle shape test: `scripts/build.mjs` emits `dist/index.html`, `dist/assets/polyfly.js`, and the expected base path.
+- Bundle shape test: `scripts/build.mjs` emits `dist/index.html`, `dist/assets/softskies.js`, and the expected base path.
 - Generator determinism tests: same seed/coordinates produce identical heights/materials/rivers; different seeds differ.
 - Chunk seam tests: adjacent chunks produce identical shared border heights.
 - Streaming tests: loaded chunk keys stay within `MAX_CHUNKS` and evicted chunks call disposal hooks.

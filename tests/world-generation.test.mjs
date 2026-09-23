@@ -6,7 +6,7 @@ import { generateChunkDressing } from "../src/world/generation/dressing.js";
 import { getChunkBorderHeights, generateTerrainChunk, sampleTerrain } from "../src/world/generation/terrain.js";
 import { listChunkRiverInfluences, sampleRiver } from "../src/world/generation/rivers.js";
 
-const TEST_SEED = "polyfly-test-seed";
+const TEST_SEED = "softskies-test-seed";
 
 test("terrain samples are deterministic for the same seed and coordinates", () => {
   const first = sampleTerrain(TEST_SEED, 123.5, -77.25);
@@ -39,9 +39,9 @@ test("chunk generation exposes bounded sample data and deterministic river influ
 });
 
 test("river sampling is deterministic and seed-sensitive", () => {
-  const first = sampleRiver(TEST_SEED, -170, -1330);
-  const second = sampleRiver(TEST_SEED, -170, -1330);
-  const otherSeed = sampleRiver(`${TEST_SEED}-other`, -170, -1330);
+  const first = sampleRiver(TEST_SEED, -2000, 1240);
+  const second = sampleRiver(TEST_SEED, -2000, 1240);
+  const otherSeed = sampleRiver(`${TEST_SEED}-other`, -2000, 1240);
 
   assert.deepEqual(second, first);
   assert.ok(first.strength > 0.3, "fixture should sample a visible deterministic river core");
@@ -85,9 +85,9 @@ test("visible river materials stay in lowland valleys on gentle terrain", () => 
 });
 
 test("chunk dressing is deterministic and bounded", () => {
-  const plains = generateChunkDressing(TEST_SEED, -1, 0);
-  const repeated = generateChunkDressing(TEST_SEED, -1, 0);
-  const snow = generateChunkDressing(WORLD_SEED, -3, -1);
+  const plains = generateChunkDressing(TEST_SEED, -10, -10);
+  const repeated = generateChunkDressing(TEST_SEED, -10, -10);
+  const snow = generateChunkDressing(WORLD_SEED, -20, -20);
 
   assert.deepEqual(repeated, plains);
   assert.ok(plains.features.length <= plains.stats.maxFeatures);

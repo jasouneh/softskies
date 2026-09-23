@@ -25,7 +25,7 @@ test("cloud fields are deterministic, bounded, and visible around the default fl
 
 test("cloud generation is seed-sensitive and uses large deterministic cells", () => {
   const first = generateCloudCell(WORLD_SEED, -1, -1);
-  const otherSeed = generateCloudCell("polyfly-other-cloud-seed", -1, -1);
+  const otherSeed = generateCloudCell("softskies-other-cloud-seed", -1, -1);
   const entries = listCloudCellEntries({ x: 10, z: -4 }, CLOUD_CONFIG);
 
   assert.notDeepEqual(otherSeed, first);

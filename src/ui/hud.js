@@ -9,13 +9,13 @@ export function createHud(root, {
   onAvatarChange = () => {},
 } = {}) {
   const overlay = document.createElement("div");
-  overlay.className = "polyfly-ui";
+  overlay.className = "softskies-ui";
   overlay.hidden = true;
   overlay.innerHTML = `
-    <button type="button" class="polyfly-ui-button polyfly-pause-button" data-action="pause" aria-label="Pause game">Pause</button>
-    <div class="polyfly-avatar-picker">
-      <button type="button" class="polyfly-ui-button polyfly-avatar-trigger" data-action="avatar-trigger" aria-haspopup="menu" aria-expanded="false">Avatar</button>
-      <div class="polyfly-avatar-menu" data-role="avatar-menu" role="menu" hidden></div>
+    <button type="button" class="softskies-ui-button softskies-pause-button" data-action="pause" aria-label="Pause game">Pause</button>
+    <div class="softskies-avatar-picker">
+      <button type="button" class="softskies-ui-button softskies-avatar-trigger" data-action="avatar-trigger" aria-haspopup="menu" aria-expanded="false">Avatar</button>
+      <div class="softskies-avatar-menu" data-role="avatar-menu" role="menu" hidden></div>
     </div>
   `;
   root.append(overlay);
@@ -28,13 +28,13 @@ export function createHud(root, {
   for (const avatar of avatars) {
     const button = document.createElement("button");
     button.type = "button";
-    button.className = "polyfly-avatar-option";
+    button.className = "softskies-avatar-option";
     button.dataset.avatarId = avatar.id;
     button.setAttribute("role", "menuitemradio");
     button.setAttribute("aria-checked", "false");
 
     const thumbnail = document.createElement("img");
-    thumbnail.className = "polyfly-avatar-thumb";
+    thumbnail.className = "softskies-avatar-thumb";
     thumbnail.alt = "";
     thumbnail.src = avatar.thumbnailSrc ?? createPhoenixThumbnailDataUri();
     thumbnail.width = 48;
@@ -61,7 +61,7 @@ export function createHud(root, {
 
   function show() {
     overlay.hidden = false;
-    root.classList.add("has-polyfly-ui");
+    root.classList.add("has-softskies-ui");
   }
 
   function setPaused(paused) {

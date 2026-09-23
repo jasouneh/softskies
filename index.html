@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content="Soft Skies is a relaxing low-poly flight sim about drifting through bright open skies." />
-    <meta name="polyfly-base-path" content="./" />
+    <meta name="softskies-base-path" content="./" />
     <title>Soft Skies</title>
     <style>
       :root {
@@ -31,7 +31,7 @@
         overflow: hidden;
       }
 
-      .polyfly-shell {
+      .softskies-shell {
         position: relative;
         width: 100%;
         height: 100%;
@@ -42,7 +42,7 @@
         display: none !important;
       }
 
-      .polyfly-ui {
+      .softskies-ui {
         position: absolute;
         left: clamp(0.65rem, 1.6vw, 1.15rem);
         bottom: clamp(0.65rem, 1.6vw, 1.15rem);
@@ -63,7 +63,7 @@
         pointer-events: auto;
       }
 
-      .polyfly-ui button {
+      .softskies-ui button {
         border: 1px solid rgb(255 255 255 / 18%);
         border-radius: 0.44rem;
         background: rgb(255 247 223 / 13%);
@@ -71,34 +71,34 @@
         font: inherit;
       }
 
-      .polyfly-ui button:focus-visible {
+      .softskies-ui button:focus-visible {
         outline: 2px solid rgb(255 218 125 / 70%);
         outline-offset: 2px;
       }
 
-      .polyfly-ui-button {
+      .softskies-ui-button {
         height: 1.65rem;
         padding: 0 0.52rem;
         cursor: pointer;
         white-space: nowrap;
       }
 
-      .polyfly-pause-button {
+      .softskies-pause-button {
         flex: 0 0 4.25rem;
         width: 4.25rem;
         text-align: center;
       }
 
-      .polyfly-avatar-picker {
+      .softskies-avatar-picker {
         position: relative;
         display: flex;
       }
 
-      .polyfly-avatar-trigger {
+      .softskies-avatar-trigger {
         min-width: 4.25rem;
       }
 
-      .polyfly-avatar-menu {
+      .softskies-avatar-menu {
         position: absolute;
         left: 0;
         bottom: calc(100% + 0.35rem);
@@ -113,7 +113,7 @@
         backdrop-filter: blur(0.55rem);
       }
 
-      .polyfly-avatar-option {
+      .softskies-avatar-option {
         display: grid;
         grid-template-columns: 2.4rem 1fr;
         align-items: center;
@@ -124,12 +124,12 @@
         cursor: pointer;
       }
 
-      .polyfly-avatar-option.is-selected {
+      .softskies-avatar-option.is-selected {
         border-color: rgb(255 224 141 / 45%);
         background: rgb(255 206 103 / 18%);
       }
 
-      .polyfly-avatar-thumb {
+      .softskies-avatar-thumb {
         width: 2.4rem;
         height: 1.8rem;
         border-radius: 0.34rem;
@@ -138,12 +138,12 @@
         object-fit: cover;
       }
 
-      .is-paused .polyfly-ui {
+      .is-paused .softskies-ui {
         background: rgb(45 33 31 / 30%);
       }
 
       canvas,
-      .polyfly-canvas {
+      .softskies-canvas {
         display: block;
         width: 100%;
         height: 100%;
@@ -152,7 +152,7 @@
     </style>
   </head>
   <body>
-    <main id="app" class="polyfly-shell" aria-label="Soft Skies game viewport">
+    <main id="app" class="softskies-shell" aria-label="Soft Skies game viewport">
       <noscript>Soft Skies needs JavaScript enabled to render the Three.js scene.</noscript>
     </main>
     <script type="module" src="./src/main.js"></script>

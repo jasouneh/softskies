@@ -12,7 +12,7 @@ test("source page points at the native browser module entry", async () => {
   const html = await readProjectFile("index.html");
 
   assert.match(html, /<script type="module" src="\.\/src\/main\.js"><\/script>/);
-  assert.match(html, /<meta name="polyfly-base-path" content="\.\/" \/>/);
+  assert.match(html, /<meta name="softskies-base-path" content="\.\/" \/>/);
   assert.doesNotMatch(html, /dist\//, "source page should not reference generated output");
 });
 
@@ -23,10 +23,10 @@ test("hud exposes compact pause/play and avatar thumbnail menu hooks", async () 
   ]);
 
   assert.match(html, /background: rgb\(24 42 35 \/ 28%\)/);
-  assert.match(html, /\.polyfly-pause-button[\s\S]*width: 4\.25rem/);
+  assert.match(html, /\.softskies-pause-button[\s\S]*width: 4\.25rem/);
   assert.match(hud, /textContent = paused \? "Play" : "Pause"/);
   assert.match(hud, /data-action="avatar-trigger"/);
-  assert.match(hud, /polyfly-avatar-thumb/);
+  assert.match(hud, /softskies-avatar-thumb/);
   assert.doesNotMatch(hud, /<select/);
   assert.doesNotMatch(hud, /Resume/);
 });
@@ -39,8 +39,8 @@ test("source entry imports Three.js through the project boundary and wires cloud
   assert.match(source, /import \{ createCloudLayer \} from "\.\/atmosphere\/clouds\.js";/);
   assert.match(source, /const cloudLayer = createCloudLayer\(scene\);/);
   assert.match(source, /cloudLayer\.update/);
-  assert.match(source, /export function createPolyFlyShell/);
-  assert.match(source, /export function mountPolyFlyShell/);
+  assert.match(source, /export function createSoftSkiesShell/);
+  assert.match(source, /export function mountSoftSkiesShell/);
   assert.match(threeBoundary, /THREE_VERSION = "0\.170\.0"/);
   assert.match(threeBoundary, /https:\/\/cdn\.jsdelivr\.net\/npm\/three@0\.170\.0\/build\/three\.module\.js/);
 });
