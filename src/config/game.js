@@ -30,17 +30,17 @@ export const MATERIAL_NAMES = Object.freeze([
 export const FLIGHT_CONFIG = Object.freeze({
   startAltitude: 86,
   minTerrainClearance: 24,
-  baseSpeed: 42,
-  boostSpeed: 72,
-  acceleration: 2.4,
-  pitchRate: 1.35,
-  yawRate: 1.25,
-  bankYawRate: 0.58,
-  maxPitch: 0.72,
-  minPitch: -0.78,
-  maxRoll: 0.95,
-  rollResponsiveness: 5.2,
-  autoLevel: 1.8,
+  baseSpeed: 30,
+  boostSpeed: 50,
+  acceleration: 2.1,
+  pitchRate: 0.98,
+  yawRate: 0.98,
+  bankYawRate: 0.43,
+  maxPitch: 0.58,
+  minPitch: -0.62,
+  maxRoll: 0.82,
+  rollResponsiveness: 4.4,
+  autoLevel: 1.7,
 });
 
 export const CAMERA_CONFIG = Object.freeze({

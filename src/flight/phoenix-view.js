@@ -109,7 +109,7 @@ export function createPhoenixView() {
   let windIntensity = 0;
   let climbResponse = 0;
   let turnResponse = 0;
-  let wingBeatPhase = 0;
+  let wingBeatPhase = -Math.PI / 2;
 
   return {
     object: group,
@@ -120,29 +120,31 @@ export function createPhoenixView() {
       const boosting = Boolean(effects.boost);
       const climbTarget = getWingClimbTarget(pose, effects);
       const turnTarget = getWingTurnTarget(pose, effects);
-      const responseBlend = 1 - Math.exp(-dt * 8.5);
+      const responseBlend = 1 - Math.exp(-dt * 7.25);
       climbResponse += (climbTarget - climbResponse) * responseBlend;
       turnResponse += (turnTarget - turnResponse) * responseBlend;
 
-      const turnMagnitude = Math.abs(turnResponse);
-      const actionIntensity = clamp(climbResponse * 0.95 + turnMagnitude * 0.72, 0, 1);
-      if (actionIntensity > 0.01) {
-        wingBeatPhase += dt * (5.1 + climbResponse * 2.8 + turnMagnitude * 1.4 + (boosting ? 0.35 : 0));
-      }
-      const wingBeat = actionIntensity > 0.01
-        ? Math.sin(wingBeatPhase) * (0.08 + climbResponse * 0.32 + turnMagnitude * 0.12) * actionIntensity
-        : 0;
-      const climbLift = climbResponse * 0.24;
-      const turnLean = turnResponse * 0.24;
+      const wingMotion = updatePhoenixWingMotion({
+        dt,
+        boosting,
+        climbResponse,
+        turnResponse,
+        wingBeatPhase,
+      });
+      wingBeatPhase = wingMotion.phase;
 
-      leftWing.root.rotation.z = 0.16 + climbLift + wingBeat - turnLean;
-      rightWing.root.rotation.z = -0.16 - climbLift - wingBeat - turnLean;
-      leftWing.root.rotation.x = -0.02 - climbResponse * 0.08 + turnMagnitude * 0.035;
-      rightWing.root.rotation.x = -0.02 - climbResponse * 0.08 + turnMagnitude * 0.035;
-      leftWing.tip.rotation.z = -0.14 - (climbLift + wingBeat) * 0.45 - turnLean * 0.28;
-      rightWing.tip.rotation.z = 0.14 + (climbLift + wingBeat) * 0.45 - turnLean * 0.28;
-      leftWing.tip.rotation.x = climbResponse * 0.08 + turnResponse * 0.07;
-      rightWing.tip.rotation.x = climbResponse * 0.08 - turnResponse * 0.07;
+      leftWing.root.rotation.z = 0.13 + wingMotion.climbLift + wingMotion.rootFlap - wingMotion.turnLean;
+      rightWing.root.rotation.z = -0.13 - wingMotion.climbLift - wingMotion.rootFlap - wingMotion.turnLean;
+      leftWing.root.rotation.x = -0.035 - wingMotion.angleOfAttack + wingMotion.turnMagnitude * 0.035;
+      rightWing.root.rotation.x = -0.035 - wingMotion.angleOfAttack + wingMotion.turnMagnitude * 0.035;
+      leftWing.root.rotation.y = wingMotion.turnResponse * 0.045;
+      rightWing.root.rotation.y = wingMotion.turnResponse * 0.045;
+      leftWing.tip.rotation.z = -0.12 - wingMotion.tipFlap - wingMotion.turnLean * 0.34;
+      rightWing.tip.rotation.z = 0.12 + wingMotion.tipFlap - wingMotion.turnLean * 0.34;
+      leftWing.tip.rotation.x = wingMotion.angleOfAttack * 0.54 + wingMotion.turnResponse * 0.075;
+      rightWing.tip.rotation.x = wingMotion.angleOfAttack * 0.54 - wingMotion.turnResponse * 0.075;
+      updateWingFeatherMotion(leftWing, -1, wingMotion);
+      updateWingFeatherMotion(rightWing, 1, wingMotion);
 
       tail.root.rotation.y = Math.sin(elapsed * 2.3) * 0.08 + pose.bankAmount * 0.16;
       tail.root.rotation.x = Math.sin(elapsed * 3.4) * 0.05;
@@ -167,17 +169,77 @@ export function createPhoenixView() {
 }
 
 function getWingClimbTarget(pose, effects) {
-  const climbFromFlightPath = clamp(((pose.forward?.y ?? 0) - 0.045) / 0.32, 0, 1);
-  const keyboardClimb = Math.max(0, effects.pitch ?? 0) * 0.78;
-  const mouseClimb = Math.max(0, effects.mousePitchDelta ?? 0) * 6;
+  const climbFromFlightPath = clamp(((pose.forward?.y ?? 0) - 0.035) / 0.24, 0, 1);
+  const keyboardClimb = Math.max(0, effects.pitch ?? 0) * 0.9;
+  const mouseClimb = Math.max(0, effects.mousePitchDelta ?? 0) * 4.5;
   return clamp(Math.max(climbFromFlightPath, keyboardClimb, mouseClimb), 0, 1);
 }
 
 function getWingTurnTarget(pose, effects) {
-  const bankTurn = clamp(pose.bankAmount ?? 0, -1, 1) * 0.78;
-  const keyboardTurn = clamp(effects.roll ?? 0, -1, 1) * 0.26;
-  const mouseTurn = clamp(effects.mouseYawDelta ?? 0, -0.18, 0.18) * 1.25;
+  const bankTurn = clamp(pose.bankAmount ?? 0, -1, 1) * 0.9;
+  const keyboardTurn = clamp(effects.roll ?? 0, -1, 1) * 0.18;
+  const mouseTurn = clamp(effects.mouseYawDelta ?? 0, -0.16, 0.16) * 0.85;
   return clamp(bankTurn + keyboardTurn + mouseTurn, -1, 1);
+}
+
+function updatePhoenixWingMotion({ dt, boosting, climbResponse, turnResponse, wingBeatPhase }) {
+  const turnMagnitude = Math.abs(turnResponse);
+  const actionIntensity = clamp(Math.max(climbResponse * 1.08, turnMagnitude * 0.86), 0, 1);
+  const shouldFlap = actionIntensity > 0.025;
+  let phase = wingBeatPhase;
+  if (shouldFlap) {
+    phase += dt * (3.65 + climbResponse * 1.45 + turnMagnitude * 0.9 + (boosting ? 0.22 : 0));
+    if (phase > TAU || phase < -TAU) {
+      phase -= Math.trunc(phase / TAU) * TAU;
+    }
+  }
+
+  const sine = shouldFlap ? Math.sin(phase) : 0;
+  const laggedSine = shouldFlap ? Math.sin(phase - 0.58) : 0;
+  const downstroke = Math.max(0, sine);
+  const upstroke = Math.max(0, -sine);
+  const rootAmplitude = (0.18 + climbResponse * 0.24 + turnMagnitude * 0.08) * actionIntensity;
+  const tipAmplitude = (0.16 + climbResponse * 0.25 + turnMagnitude * 0.1) * actionIntensity;
+  const rootFlap = (downstroke * 1.04 - upstroke * 0.66) * rootAmplitude;
+  const tipLag = laggedSine * tipAmplitude;
+  const climbLift = climbResponse * 0.12;
+  const turnLean = turnResponse * 0.28;
+  const angleOfAttack = climbResponse * 0.12 + downstroke * actionIntensity * 0.055 - upstroke * actionIntensity * 0.028;
+
+  return {
+    phase,
+    actionIntensity,
+    turnResponse,
+    turnMagnitude,
+    downstroke,
+    upstroke,
+    rootFlap,
+    tipFlap: climbLift * 0.58 + rootFlap * 0.42 + tipLag * 0.72,
+    tipLag,
+    climbLift,
+    turnLean,
+    angleOfAttack,
+  };
+}
+
+function updateWingFeatherMotion(wing, side, motion) {
+  for (let index = 0; index < wing.secondaryFeathers.length; index += 1) {
+    const feather = wing.secondaryFeathers[index];
+    const base = feather.userData.baseRotation;
+    const indexScale = 1 + index * 0.08;
+    feather.rotation.x = base.x + (motion.downstroke * 0.04 - motion.upstroke * 0.026) * motion.actionIntensity * indexScale;
+    feather.rotation.y = base.y + side * motion.tipLag * 0.022 * indexScale - motion.turnResponse * 0.014;
+    feather.rotation.z = base.z + side * (motion.rootFlap * 0.05 + motion.tipLag * 0.035) * indexScale - motion.turnResponse * 0.016;
+  }
+
+  for (let index = 0; index < wing.primaryFeathers.length; index += 1) {
+    const feather = wing.primaryFeathers[index];
+    const base = feather.userData.baseRotation;
+    const indexScale = 1 + index * 0.045;
+    feather.rotation.x = base.x + (motion.downstroke * 0.07 - motion.upstroke * 0.045) * motion.actionIntensity * indexScale + motion.tipLag * 0.03;
+    feather.rotation.y = base.y + side * motion.tipLag * 0.055 * indexScale - motion.turnResponse * 0.024;
+    feather.rotation.z = base.z + side * (motion.rootFlap * 0.08 + motion.tipLag * 0.07) * indexScale - motion.turnResponse * 0.02;
+  }
 }
 
 function createPhoenixMaterials() {
@@ -334,6 +396,7 @@ function createWing(side, materials) {
   leadingFacet.position.y = 0.045;
   root.add(leadingFacet);
 
+  const secondaryFeathers = [];
   const secondaryMaterials = [materials.sunlit, materials.gold, materials.amber, materials.orange, materials.red];
   for (let index = 0; index < secondaryMaterials.length; index += 1) {
     const secondary = new THREE.Mesh(createFeatherGeometry(0.12 + index * 0.012, 0.82 + index * 0.08), secondaryMaterials[index]);
@@ -342,7 +405,9 @@ function createWing(side, materials) {
     secondary.rotation.x = 0.08 + index * 0.02;
     secondary.rotation.y = sign * (0.04 + index * 0.018);
     secondary.rotation.z = sign * (0.15 + index * 0.055);
+    rememberBaseRotation(secondary);
     root.add(secondary);
+    secondaryFeathers.push(secondary);
   }
 
   const tip = new THREE.Group();
@@ -368,6 +433,7 @@ function createWing(side, materials) {
   shadowFacet.position.set(sign * -1.08, -0.035, 0.22);
   tip.add(shadowFacet);
 
+  const primaryFeathers = [];
   const primaryMaterials = [
     materials.sunlit,
     materials.gold,
@@ -385,7 +451,9 @@ function createWing(side, materials) {
     feather.rotation.x = 0.04 + index * 0.014;
     feather.rotation.y = sign * (0.02 + index * 0.016);
     feather.rotation.z = sign * (0.08 + index * 0.05);
+    rememberBaseRotation(feather);
     tip.add(feather);
+    primaryFeathers.push(feather);
   }
 
   root.add(tip);
@@ -393,7 +461,11 @@ function createWing(side, materials) {
   const wind = createWingtipWind(side, materials.wind);
   root.add(wind.group);
 
-  return { root, tip, wind };
+  return { root, tip, wind, secondaryFeathers, primaryFeathers };
+}
+
+function rememberBaseRotation(object) {
+  object.userData.baseRotation = object.rotation.clone();
 }
 
 function createTail(materials) {

@@ -18,7 +18,7 @@ export function createFlightControls(options = {}) {
 }
 
 export class FlightControls {
-  constructor({ domElement, ownerDocument = document, mouseSensitivity = 0.0024 } = {}) {
+  constructor({ domElement, ownerDocument = document, mouseSensitivity = 0.0019 } = {}) {
     if (!domElement) {
       throw new Error("FlightControls requires a domElement.");
     }
