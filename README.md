@@ -7,7 +7,7 @@ polyFly is a browser-based Three.js free-flight prototype for GitHub Pages. The 
 This repository currently contains the first playable vertical slice. It includes:
 
 - a static source page (`index.html`) that loads native browser modules from `src/`;
-- a procedural low-poly phoenix with third-person chase camera framing;
+- a procedural colorful low-poly phoenix with third-person chase camera framing, fire trail particles, and Shift boost wing-tip wind effects;
 - pointer-lock mouse steering, WASD/arrow flight controls, Shift boost, and Space pause/resume;
 - a compact mouse-revealed bottom-left UI with fixed-width Pause/Play control and an avatar thumbnail menu hook;
 - deterministic chunked terrain streaming with explicit `MAX_CHUNKS` bounds and disposal hooks;
@@ -19,7 +19,7 @@ This repository currently contains the first playable vertical slice. It include
 
 ## Intended v1 scope
 
-- Phoenix avatar built from procedural/generative low-poly geometry; no downloaded game assets for v1.
+- Phoenix avatar, fire trail, and boost wind effects built from procedural/generative low-poly geometry; no downloaded game assets for v1.
 - Third-person always-flying controls: mouse-look plus WASD-style flight input, with no walking or landing yet.
 - Infinite deterministic terrain streaming from procedural source data: bright plains, stylized mountains, snow bands on peaks, and decorative rivers.
 - Free-flight exploration only; no goals, score loop, or combat in the first playable slice.

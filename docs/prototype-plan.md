@@ -28,7 +28,7 @@ Start with small browser modules under `src/`; keep module APIs narrow so they c
 - `src/engine/renderer.js`: creates the Three.js renderer, scene, camera root, color management, resize handling, and render pass order.
 - `src/input/controls.js`: converts pointer lock/mouse movement and keyboard state into normalized flight intents (`pitch`, `yaw`, `roll`, `throttle`, `boost`).
 - `src/flight/phoenix-controller.js`: integrates velocity/orientation for an always-flying avatar. It should not create meshes.
-- `src/flight/phoenix-view.js`: procedural low-poly phoenix mesh, wing/tail animation parameters, and material palette.
+- `src/flight/phoenix-view.js`: procedural low-poly phoenix mesh, wing/tail animation parameters, bounded fire/wind effects, and material palette.
 - `src/camera/chase-camera.js`: third-person camera rig that follows the phoenix with smoothing and collision-free altitude constraints later.
 - `src/world/chunk-coordinator.js`: maps player position to chunk keys, loads/unloads chunks, enforces memory caps, and schedules generation work.
 - `src/world/generation/base-terrain.js`: river-free base height fields and terrain grade helpers shared by terrain and river routing.
@@ -86,7 +86,7 @@ Chunk keys are `floor(worldX / CHUNK_SIZE), floor(worldZ / CHUNK_SIZE)`. Neighbo
 
 - Input stores raw keyboard/pointer state and emits normalized intents only.
 - Flight controller owns motion: forward speed baseline, pitch/yaw/roll response, banking visual hints, altitude floor above terrain later, and gentle damping.
-- Phoenix view owns visuals: procedural body, wings, tail flames/feathers, palette, and animation from controller state.
+- Phoenix view owns visuals: procedural body, wings, tail flames/feathers, bounded fire trail and boost wingtip wind effects, palette, and animation from controller state.
 - Chase camera owns framing: offset behind/above the phoenix, smoothing, field-of-view changes for boost, and no gameplay decisions.
 - Terrain queries should be read-only for flight. Do not make terrain chunks depend on phoenix mesh state.
 

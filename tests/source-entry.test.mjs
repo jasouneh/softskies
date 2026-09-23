@@ -44,3 +44,18 @@ test("source entry imports Three.js through the project boundary and wires cloud
   assert.match(threeBoundary, /THREE_VERSION = "0\.170\.0"/);
   assert.match(threeBoundary, /https:\/\/cdn\.jsdelivr\.net\/npm\/three@0\.170\.0\/build\/three\.module\.js/);
 });
+
+test("phoenix source stays procedural and wires bounded fire and boost wind effects", async () => {
+  const [source, phoenix] = await Promise.all([
+    readProjectFile("src/main.js"),
+    readProjectFile("src/flight/phoenix-view.js"),
+  ]);
+
+  assert.match(source, /phoenix\.update\(dt, playableElapsed, updatedPose, \{ boost: intent\.boost \}\)/);
+  assert.match(phoenix, /FIRE_PARTICLE_COUNT = 48/);
+  assert.match(phoenix, /new THREE\.InstancedMesh\(geometry, material, FIRE_PARTICLE_COUNT\)/);
+  assert.match(phoenix, /bounded procedural phoenix fire particle trail/);
+  assert.match(phoenix, /boost wingtip wind animation/);
+  assert.match(phoenix, /WIND_STREAKS_PER_SIDE = 4/);
+  assert.doesNotMatch(phoenix, /https?:\/\//);
+});

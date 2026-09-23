@@ -123,7 +123,7 @@ export function createPolyFlyShell({ mountNode = document.body } = {}) {
         const updatedPose = controller.getPose();
         terrainHeight = sampleTerrain(WORLD_SEED, updatedPose.position.x, updatedPose.position.z).height;
         chunks.update(updatedPose.position);
-        phoenix.update(dt, playableElapsed, updatedPose);
+        phoenix.update(dt, playableElapsed, updatedPose, { boost: intent.boost });
         chaseCamera.update(dt, updatedPose, { boost: intent.boost });
         atmosphereState = atmosphere.update(playableElapsed, { camera });
         cloudState = cloudLayer.update({
@@ -165,6 +165,8 @@ export function createPolyFlyShell({ mountNode = document.body } = {}) {
       document.removeEventListener("keydown", handlePauseKey);
       chunks.disposeAll();
       cloudLayer.dispose();
+      scene.remove(phoenix.object);
+      phoenix.dispose?.();
       disposeTerrainMaterialPalette(terrainMaterials);
       disposeDressingMaterial(dressingMaterial);
       hud.dispose();
