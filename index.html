@@ -38,65 +38,113 @@
         background: linear-gradient(180deg, #61c7ff 0%, #f7bd5d 72%, #293b45 100%);
       }
 
-      .polyfly-overlay {
+      [hidden] {
+        display: none !important;
+      }
+
+      .polyfly-ui {
         position: absolute;
-        left: clamp(1rem, 3vw, 2.5rem);
-        top: clamp(1rem, 3vw, 2rem);
-        max-width: min(32rem, calc(100vw - 2rem));
-        padding: 1rem 1.15rem;
+        left: clamp(0.75rem, 2vw, 1.4rem);
+        bottom: clamp(0.75rem, 2vw, 1.4rem);
+        z-index: 2;
+        width: min(20rem, calc(100vw - 1.5rem));
+        padding: 0.72rem;
+        border: 1px solid rgb(255 255 255 / 20%);
+        border-radius: 0.95rem;
+        background: rgb(24 42 35 / 62%);
+        box-shadow: 0 1rem 2.75rem rgb(0 0 0 / 20%);
+        backdrop-filter: blur(0.65rem);
+        pointer-events: auto;
+      }
+
+      .polyfly-ui__status,
+      .polyfly-ui__actions {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.55rem;
+      }
+
+      .polyfly-ui__status {
+        margin-bottom: 0.5rem;
+        color: #fff7df;
+        font-size: 0.88rem;
+      }
+
+      .polyfly-ui__status span {
+        color: #cceec0;
+      }
+
+      .polyfly-ui__actions button,
+      .polyfly-ui__actions select {
         border: 1px solid rgb(255 255 255 / 24%);
-        border-radius: 1rem;
-        background: rgb(9 21 40 / 68%);
-        box-shadow: 0 1.5rem 4rem rgb(0 0 0 / 24%);
-        backdrop-filter: blur(0.75rem);
-        pointer-events: none;
+        border-radius: 0.55rem;
+        background: rgb(255 247 223 / 16%);
+        color: #fff7df;
+        font: inherit;
       }
 
-      .polyfly-overlay h1 {
-        margin: 0 0 0.35rem;
-        font-size: clamp(1.35rem, 4vw, 2.25rem);
-        letter-spacing: 0.02em;
+      .polyfly-ui__actions button {
+        padding: 0.4rem 0.58rem;
+        cursor: pointer;
       }
 
-      .polyfly-overlay p {
-        margin: 0;
+      .polyfly-ui__actions label {
+        display: flex;
+        align-items: center;
+        gap: 0.35rem;
         color: #ffe9bb;
-        line-height: 1.45;
+        font-size: 0.78rem;
+      }
+
+      .polyfly-ui__actions select {
+        max-width: 7.5rem;
+        padding: 0.36rem 0.42rem;
       }
 
       .polyfly-stats {
         display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 0.4rem 0.75rem;
-        margin: 0.8rem 0;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 0.32rem;
+        margin: 0.55rem 0 0.4rem;
       }
 
       .polyfly-stats div {
-        padding: 0.42rem 0.5rem;
-        border: 1px solid rgb(255 255 255 / 14%);
-        border-radius: 0.65rem;
-        background: rgb(255 255 255 / 9%);
+        padding: 0.35rem 0.38rem;
+        border: 1px solid rgb(255 255 255 / 12%);
+        border-radius: 0.5rem;
+        background: rgb(255 255 255 / 8%);
       }
 
       .polyfly-stats dt {
-        font-size: 0.68rem;
+        font-size: 0.58rem;
         color: #bdeaff;
         text-transform: uppercase;
-        letter-spacing: 0.09em;
+        letter-spacing: 0.08em;
       }
 
       .polyfly-stats dd {
-        margin: 0.12rem 0 0;
+        overflow: hidden;
+        margin: 0.08rem 0 0;
         color: #fff7df;
+        font-size: 0.72rem;
         font-weight: 700;
+        text-overflow: ellipsis;
+        white-space: nowrap;
       }
 
-      .polyfly-lock {
-        font-size: 0.86rem;
+      .polyfly-hint {
+        margin: 0;
+        color: #ffe9bb;
+        font-size: 0.76rem;
       }
 
-      .is-pointer-locked .polyfly-overlay {
-        opacity: 0.58;
+      .is-pointer-locked .polyfly-ui {
+        opacity: 0.7;
+      }
+
+      .is-paused .polyfly-ui {
+        background: rgb(45 33 31 / 72%);
       }
 
       canvas,

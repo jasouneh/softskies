@@ -1,46 +1,19 @@
 import { MATERIAL_IDS, MATERIAL_NAMES, WORLD_CONFIG, WORLD_SEED } from "../../config/game.js";
-import { clamp, fbm2, normalizeSeed, ridgedFbm2, smoothstep } from "./noise.js";
+import { sampleBaseTerrain } from "./base-terrain.js";
+import { normalizeSeed, smoothstep } from "./noise.js";
 import { listChunkRiverInfluences, sampleRiver } from "./rivers.js";
 
 export function sampleTerrain(seed = WORLD_SEED, worldX = 0, worldZ = 0) {
   const seedHash = normalizeSeed(seed);
-  const plains = fbm2(seedHash ^ 0x0f00d123, worldX, worldZ, {
-    frequency: 0.0024,
-    octaves: 4,
-    gain: 0.52,
-  });
-  const smallHills = fbm2(seedHash ^ 0x7ca129bb, worldX, worldZ, {
-    frequency: 0.009,
-    octaves: 3,
-    gain: 0.44,
-  });
-  const mountainField = fbm2(seedHash ^ 0x4d3a12ef, worldX, worldZ, {
-    frequency: 0.0018,
-    octaves: 5,
-    gain: 0.56,
-  }) * 0.5 + 0.5;
-  const ridges = ridgedFbm2(seedHash ^ 0x2a93bc17, worldX, worldZ, {
-    frequency: 0.0065,
-    octaves: 4,
-    gain: 0.5,
-  });
-  const mountainMask = smoothstep(0.52, 0.82, mountainField + ridges * 0.18);
-  const massif = Math.pow(mountainMask, 1.45);
-  const terrace = Math.floor((smallHills * 0.5 + 0.5) * 5) / 5;
-
-  let height = 3.5
-    + plains * 10
-    + terrace * 6
-    + massif * (34 + ridges * 56);
-
-  const slopeProxy = clamp(ridges * massif + Math.abs(smallHills) * 0.35);
+  const base = sampleBaseTerrain(seedHash, worldX, worldZ);
+  const { plains, mountain: massif, slopeProxy } = base;
   const rawRiver = sampleRiver(seedHash, worldX, worldZ);
-  const lowlandFactor = (1 - smoothstep(0.12, 0.34, massif)) * (1 - smoothstep(32, 54, height));
-  const gentleBankFactor = 1 - smoothstep(0.3, 0.58, slopeProxy);
+  const lowlandFactor = (1 - smoothstep(0.16, 0.34, massif)) * (1 - smoothstep(34, 50, base.height));
+  const gentleBankFactor = 1 - smoothstep(0.34, 0.58, slopeProxy);
   const riverStrength = rawRiver.strength * lowlandFactor * gentleBankFactor;
   const bankStrength = rawRiver.bankStrength * lowlandFactor * gentleBankFactor;
-  const riverCut = bankStrength * 4.2 + riverStrength * 3.8;
-  height -= riverCut;
+  const riverCut = bankStrength * 2.2 + riverStrength * 3.4;
+  const height = base.height - riverCut;
 
   const river = {
     ...rawRiver,

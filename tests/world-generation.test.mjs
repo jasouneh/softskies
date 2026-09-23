@@ -39,11 +39,12 @@ test("chunk generation exposes bounded sample data and deterministic river influ
 });
 
 test("river sampling is deterministic and seed-sensitive", () => {
-  const first = sampleRiver(TEST_SEED, 48, 96);
-  const second = sampleRiver(TEST_SEED, 48, 96);
-  const otherSeed = sampleRiver(`${TEST_SEED}-other`, 48, 96);
+  const first = sampleRiver(TEST_SEED, -170, -1330);
+  const second = sampleRiver(TEST_SEED, -170, -1330);
+  const otherSeed = sampleRiver(`${TEST_SEED}-other`, -170, -1330);
 
   assert.deepEqual(second, first);
+  assert.ok(first.strength > 0.3, "fixture should sample a visible deterministic river core");
   assert.notDeepEqual(otherSeed, first);
   assert.deepEqual(
     listChunkRiverInfluences(TEST_SEED, 0, 0),
@@ -51,18 +52,26 @@ test("river sampling is deterministic and seed-sensitive", () => {
   );
 });
 
-test("river materials stay out of mountain and snow terrain", () => {
+test("visible river materials stay in lowland valleys on gentle terrain", () => {
   let riverSamples = 0;
-  let mountainRivers = 0;
+  let bankSamples = 0;
+  const badRiverSamples = [];
+  const badBankSamples = [];
 
-  for (let chunkZ = -3; chunkZ <= 3; chunkZ += 1) {
-    for (let chunkX = -3; chunkX <= 3; chunkX += 1) {
+  for (let chunkZ = -5; chunkZ <= 5; chunkZ += 1) {
+    for (let chunkX = -5; chunkX <= 5; chunkX += 1) {
       const chunk = generateTerrainChunk(WORLD_SEED, chunkX, chunkZ);
       for (const sample of chunk.samples) {
         if (sample.materialName === "river") {
           riverSamples += 1;
-          if (sample.mountain > 0.34 || sample.height > 58) {
-            mountainRivers += 1;
+          if (sample.mountain > 0.3 || sample.slope > 0.42 || sample.height > 32) {
+            badRiverSamples.push(sample);
+          }
+        }
+        if (sample.riverBankStrength > 0.18 || sample.riverStrength > 0.05) {
+          bankSamples += 1;
+          if (sample.mountain > 0.34 || sample.slope > 0.48 || sample.height > 38) {
+            badBankSamples.push(sample);
           }
         }
       }
@@ -70,7 +79,9 @@ test("river materials stay out of mountain and snow terrain", () => {
   }
 
   assert.ok(riverSamples > 0, "the playable area should still include lowland rivers");
-  assert.equal(mountainRivers, 0, "rivers should not visibly climb mountains or snow caps");
+  assert.ok(bankSamples > riverSamples, "river banks should feather rivers into the plains");
+  assert.deepEqual(badRiverSamples, [], "river water should not visibly climb mountains, snow caps, or high slopes");
+  assert.deepEqual(badBankSamples, [], "river banks should remain lowland and gentle too");
 });
 
 test("chunk dressing is deterministic and bounded", () => {

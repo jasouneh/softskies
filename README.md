@@ -8,9 +8,10 @@ This repository currently contains the first playable vertical slice. It include
 
 - a static source page (`index.html`) that loads native browser modules from `src/`;
 - a procedural low-poly phoenix with third-person chase camera framing;
-- pointer-lock mouse steering, WASD/arrow flight controls, and Shift boost;
+- pointer-lock mouse steering, WASD/arrow flight controls, Shift boost, and Space pause/resume;
+- a small mouse-revealed bottom-left UI with pause and avatar selection hooks;
 - deterministic chunked terrain streaming with explicit `MAX_CHUNKS` bounds and disposal hooks;
-- bright low-poly plains, stylized mountains, simple snow caps, lowland river channels, and procedural trees/houses/dead trees/igloos from deterministic generation;
+- bright low-poly plains, stylized mountains, simple snow caps, valley-following lowland river channels, and procedural trees/houses/dead trees/igloos from deterministic generation;
 - a lightweight day/night cycle with palette changes plus low-poly sun and moon markers;
 - a dependency-light Node build script that generates an ignored `dist/` static site bundle; and
 - source, deterministic generation, streaming, and bundle-shape validation tests.
@@ -40,7 +41,7 @@ node scripts/build.mjs
 BASE_PATH=/polyFly/ node scripts/build.mjs
 
 # Validate source structure, deterministic generation, streaming, and bundle shape.
-node --test tests/source-entry.test.mjs tests/world-generation.test.mjs tests/chunk-coordinator.test.mjs
+node --test tests/source-entry.test.mjs tests/world-generation.test.mjs tests/chunk-coordinator.test.mjs tests/dressing-geometry.test.mjs
 node scripts/build.mjs && node --test tests/bundle-shape.test.mjs
 # or: npm run validate
 

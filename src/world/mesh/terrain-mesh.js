@@ -3,12 +3,12 @@ import { MATERIAL_IDS } from "../../config/game.js";
 import { getChunkSample } from "../generation/terrain.js";
 
 const MATERIAL_COLORS = {
-  [MATERIAL_IDS.river]: new THREE.Color(0x30a7ff),
+  [MATERIAL_IDS.river]: new THREE.Color(0x4aa6c4),
   [MATERIAL_IDS.meadow]: new THREE.Color(0x7dd75b),
   [MATERIAL_IDS.grass]: new THREE.Color(0x53c85d),
   [MATERIAL_IDS.rock]: new THREE.Color(0x7d8a93),
   [MATERIAL_IDS.snow]: new THREE.Color(0xf5fbff),
-  [MATERIAL_IDS.sand]: new THREE.Color(0xe8c56f),
+  [MATERIAL_IDS.sand]: new THREE.Color(0xb9bc78),
 };
 
 export function createTerrainMaterialPalette() {

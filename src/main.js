@@ -33,7 +33,13 @@ export function createPolyFlyShell({ mountNode = document.body } = {}) {
 
   const rendererContext = createRenderer({ root });
   const { scene, camera, renderer } = rendererContext;
-  const hud = createHud(root);
+  let paused = false;
+  let playableElapsed = 0;
+  const hud = createHud(root, {
+    onPauseToggle() {
+      setPaused(!paused);
+    },
+  });
   const controls = createFlightControls({ domElement: renderer.domElement });
   const atmosphere = createAtmosphere(scene);
   const terrainMaterials = createTerrainMaterialPalette();
@@ -72,23 +78,55 @@ export function createPolyFlyShell({ mountNode = document.body } = {}) {
   let atmosphereState = atmosphere.update(0, { camera });
   chunks.update(controller.getPose().position);
 
-  const loop = new GameLoop({
-    update({ dt, elapsed }) {
-      const intent = controls.snapshot();
-      controller.update(dt, intent);
-      const pose = controller.getPose();
-      const terrainHeight = sampleTerrain(WORLD_SEED, pose.position.x, pose.position.z).height;
+  function revealHud() {
+    hud.show();
+  }
 
-      chunks.update(pose.position);
-      phoenix.update(dt, elapsed, pose);
-      chaseCamera.update(dt, pose, { boost: intent.boost });
-      atmosphereState = atmosphere.update(elapsed, { camera });
+  function setPaused(nextPaused) {
+    paused = nextPaused;
+    if (paused) {
+      document.exitPointerLock?.();
+    }
+    hud.show();
+    hud.setPaused(paused);
+  }
+
+  function handlePauseKey(event) {
+    if (event.code !== "Space" || event.repeat || isUiControl(event.target)) {
+      return;
+    }
+    event.preventDefault();
+    setPaused(!paused);
+  }
+
+  root.addEventListener("mousemove", revealHud, { passive: true });
+  document.addEventListener("mousemove", revealHud, { passive: true });
+  document.addEventListener("keydown", handlePauseKey);
+
+  const loop = new GameLoop({
+    update({ dt }) {
+      const intent = controls.snapshot();
+      const pose = controller.getPose();
+      let terrainHeight = sampleTerrain(WORLD_SEED, pose.position.x, pose.position.z).height;
+
+      if (!paused) {
+        playableElapsed += dt;
+        controller.update(dt, intent);
+        const updatedPose = controller.getPose();
+        terrainHeight = sampleTerrain(WORLD_SEED, updatedPose.position.x, updatedPose.position.z).height;
+        chunks.update(updatedPose.position);
+        phoenix.update(dt, playableElapsed, updatedPose);
+        chaseCamera.update(dt, updatedPose, { boost: intent.boost });
+        atmosphereState = atmosphere.update(playableElapsed, { camera });
+      }
+
       hud.update({
-        pose,
+        pose: controller.getPose(),
         terrainHeight,
         chunkStats: chunks.getStats(),
         atmosphere: atmosphereState,
         pointerLocked: intent.pointerLocked,
+        paused,
       });
     },
     render() {
@@ -107,6 +145,9 @@ export function createPolyFlyShell({ mountNode = document.body } = {}) {
     dispose() {
       loop.dispose();
       controls.dispose();
+      root.removeEventListener("mousemove", revealHud);
+      document.removeEventListener("mousemove", revealHud);
+      document.removeEventListener("keydown", handlePauseKey);
       chunks.disposeAll();
       disposeTerrainMaterialPalette(terrainMaterials);
       disposeDressingMaterial(dressingMaterial);
@@ -115,6 +156,13 @@ export function createPolyFlyShell({ mountNode = document.body } = {}) {
       root.remove();
     },
   };
+}
+
+function isUiControl(target) {
+  if (!(target instanceof Element)) {
+    return false;
+  }
+  return target.closest("button, select, input, textarea, [contenteditable='true']") !== null;
 }
 
 export function mountPolyFlyShell() {

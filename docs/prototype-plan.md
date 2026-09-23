@@ -31,8 +31,9 @@ Start with small browser modules under `src/`; keep module APIs narrow so they c
 - `src/flight/phoenix-view.js`: procedural low-poly phoenix mesh, wing/tail animation parameters, and material palette.
 - `src/camera/chase-camera.js`: third-person camera rig that follows the phoenix with smoothing and collision-free altitude constraints later.
 - `src/world/chunk-coordinator.js`: maps player position to chunk keys, loads/unloads chunks, enforces memory caps, and schedules generation work.
+- `src/world/generation/base-terrain.js`: river-free base height fields and terrain grade helpers shared by terrain and river routing.
 - `src/world/generation/terrain.js`: deterministic height/material source of truth from seed + world coordinates.
-- `src/world/generation/rivers.js`: deterministic lowland river curves/strips derived from seed and chunk coordinates.
+- `src/world/generation/rivers.js`: deterministic lowland river curves/strips derived from seed and chunk coordinates, routed through suitable valleys before terrain material projection.
 - `src/world/generation/dressing.js`: deterministic prop placement for plains trees/houses and snow dead trees/igloos.
 - `src/world/mesh/terrain-mesh.js`: converts generated chunk samples into flat-shaded Three.js geometry and disposes it.
 - `src/world/mesh/dressing-geometry.js`: pure procedural prop geometry/vertex-color data for trees, houses, dead trees, and igloos; keep winding testable without WebGL.
