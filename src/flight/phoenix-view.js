@@ -110,6 +110,7 @@ export function createPhoenixView() {
   let climbResponse = 0;
   let turnResponse = 0;
   let wingBeatPhase = -Math.PI / 2;
+  let levelFlightTime = 0;
 
   return {
     object: group,
@@ -124,12 +125,15 @@ export function createPhoenixView() {
       climbResponse += (climbTarget - climbResponse) * responseBlend;
       turnResponse += (turnTarget - turnResponse) * responseBlend;
 
+      const verticalIntent = Math.abs(effects.pitch ?? 0) + Math.abs(pose.forward?.y ?? 0);
+      levelFlightTime = verticalIntent < 0.045 ? levelFlightTime + dt : 0;
       const wingMotion = updatePhoenixWingMotion({
         dt,
         boosting,
         climbResponse,
         turnResponse,
         wingBeatPhase,
+        idleFlap: levelFlightTime > 1.15,
       });
       wingBeatPhase = wingMotion.phase;
 
@@ -182,13 +186,14 @@ function getWingTurnTarget(pose, effects) {
   return clamp(bankTurn + keyboardTurn + mouseTurn, -1, 1);
 }
 
-function updatePhoenixWingMotion({ dt, boosting, climbResponse, turnResponse, wingBeatPhase }) {
+function updatePhoenixWingMotion({ dt, boosting, climbResponse, turnResponse, wingBeatPhase, idleFlap = false }) {
   const turnMagnitude = Math.abs(turnResponse);
-  const actionIntensity = clamp(Math.max(climbResponse * 1.08, turnMagnitude * 0.86), 0, 1);
+  const activeIntensity = clamp(Math.max(climbResponse * 1.08, turnMagnitude * 0.86), 0, 1);
+  const actionIntensity = Math.max(activeIntensity, idleFlap ? 0.28 : 0);
   const shouldFlap = actionIntensity > 0.025;
   let phase = wingBeatPhase;
   if (shouldFlap) {
-    phase += dt * (3.65 + climbResponse * 1.45 + turnMagnitude * 0.9 + (boosting ? 0.22 : 0));
+    phase += dt * ((idleFlap && activeIntensity < 0.08 ? 2.55 : 3.65) + climbResponse * 1.45 + turnMagnitude * 0.9 + (boosting ? 0.22 : 0));
     if (phase > TAU || phase < -TAU) {
       phase -= Math.trunc(phase / TAU) * TAU;
     }
@@ -198,8 +203,9 @@ function updatePhoenixWingMotion({ dt, boosting, climbResponse, turnResponse, wi
   const laggedSine = shouldFlap ? Math.sin(phase - 0.58) : 0;
   const downstroke = Math.max(0, sine);
   const upstroke = Math.max(0, -sine);
-  const rootAmplitude = (0.18 + climbResponse * 0.24 + turnMagnitude * 0.08) * actionIntensity;
-  const tipAmplitude = (0.16 + climbResponse * 0.25 + turnMagnitude * 0.1) * actionIntensity;
+  const idleAmplitude = idleFlap && activeIntensity < 0.08 ? 0.1 : 0;
+  const rootAmplitude = (0.18 + idleAmplitude + climbResponse * 0.24 + turnMagnitude * 0.08) * actionIntensity;
+  const tipAmplitude = (0.16 + idleAmplitude * 0.9 + climbResponse * 0.25 + turnMagnitude * 0.1) * actionIntensity;
   const rootFlap = (downstroke * 1.04 - upstroke * 0.66) * rootAmplitude;
   const tipLag = laggedSine * tipAmplitude;
   const climbLift = climbResponse * 0.12;
@@ -543,8 +549,8 @@ function createFireTrail(material) {
 
 function updateFireTrail(trail, elapsed, speed, boosting) {
   const speedFactor = clamp((speed - 38) / 38, 0, 1);
-  const cycleSpeed = 0.62 + speedFactor * 0.48 + (boosting ? 0.16 : 0);
-  const trailLength = 7.2 + speedFactor * 2.4 + (boosting ? 1.9 : 0);
+  const cycleSpeed = (0.62 + speedFactor * 0.48 + (boosting ? 0.16 : 0)) * 0.75;
+  const trailLength = 9.1 + speedFactor * 3.2 + (boosting ? 3.4 : 0);
 
   for (let index = 0; index < FIRE_PARTICLE_COUNT; index += 1) {
     const seed = pseudoRandom(index + 1);
@@ -553,7 +559,7 @@ function updateFireTrail(trail, elapsed, speed, boosting) {
     const sideSeed = pseudoRandom(index * 31 + 11) - 0.5;
     const liftSeed = pseudoRandom(index * 43 + 17) - 0.5;
     const flicker = 0.78 + Math.sin(elapsed * 14.5 + seed * TAU) * 0.18;
-    const spread = 0.32 + age * (1.18 + (boosting ? 0.28 : 0));
+    const spread = 0.32 + age * (1.34 + (boosting ? 0.42 : 0));
     const fade = 1 - age;
     const swirl = Math.sin(age * TAU * 1.7 + seed * TAU + elapsed * 1.15) * age;
     const size = (0.11 + fade * 0.28 + Math.sin(age * Math.PI) * 0.09) * flicker;
@@ -598,7 +604,7 @@ function createWingtipWind(side, material) {
 
   const streaks = [];
   for (let index = 0; index < WIND_STREAKS_PER_SIDE; index += 1) {
-    const streak = new THREE.Mesh(createWindStreakGeometry(sign, 2.2 + index * 0.3, 0.1 + index * 0.023), material);
+    const streak = new THREE.Mesh(createWindStreakGeometry(sign, 3.1 + index * 0.42, 0.1 + index * 0.023), material);
     streak.name = `${side} procedural wingtip wind streak ${index}`;
     streak.position.set(sign * (index * 0.03), (index - 1.5) * 0.055, index * 0.08);
     streak.rotation.z = sign * (-0.08 + index * 0.03);
@@ -618,7 +624,7 @@ function updateWingtipWind(wind, intensity, elapsed) {
     const pulse = 0.72 + Math.sin(elapsed * 13 + phase * TAU) * 0.22;
     const slide = fract(elapsed * (1.8 + index * 0.18) + phase) * 0.32;
     streak.position.z = index * 0.08 + slide;
-    streak.scale.set(1, 0.72 + intensity * 0.38, (0.76 + pulse * 0.18) * (0.85 + intensity * 0.25));
+    streak.scale.set(1, 0.72 + intensity * 0.38, (0.9 + pulse * 0.24) * (0.92 + intensity * 0.42));
   }
 }
 

@@ -3,9 +3,14 @@ const COLORS = Object.freeze({
   leaf: colorFromHex(0x4f9656),
   leafLight: colorFromHex(0x6cab61),
   deadWood: colorFromHex(0x7b6757),
+  rock: colorFromHex(0x68747c),
   wall: colorFromHex(0xb8ad78),
   roof: colorFromHex(0x8b7653),
+  blacksmithRoof: colorFromHex(0x3f4548),
+  farm: colorFromHex(0x9bc66d),
+  soil: colorFromHex(0x7a5a36),
   snow: colorFromHex(0xf4fbff),
+  snowRoof: colorFromHex(0xd5edf7),
   iceShadow: colorFromHex(0xc6e7f5),
 });
 
@@ -17,6 +22,14 @@ export function createDressingGeometryData(dressing) {
       addTree(builder, feature);
     } else if (feature.type === "house") {
       addHouse(builder, feature);
+    } else if (feature.type === "blacksmith") {
+      addBlacksmith(builder, feature);
+    } else if (feature.type === "farm") {
+      addFarm(builder, feature);
+    } else if (feature.type === "snow-house") {
+      addSnowHouse(builder, feature);
+    } else if (feature.type === "snow-farm") {
+      addSnowFarm(builder, feature);
     } else if (feature.type === "dead-tree") {
       addDeadTree(builder, feature);
     } else if (feature.type === "igloo") {
@@ -55,6 +68,48 @@ function addHouse(builder, feature) {
   addGableRoof(builder, feature.x, feature.y + 2.3 * s, feature.z, 4.2 * s, 1.4 * s, 3.9 * s, COLORS.roof, feature.yaw);
   const doorForward = transformLocal(0, -1.72 * s, feature.yaw);
   addBox(builder, feature.x + doorForward.x, feature.y + 0.72 * s, feature.z + doorForward.z, 0.72 * s, 1.45 * s, 0.18 * s, COLORS.bark, feature.yaw);
+  const chimney = transformLocal(1.25 * s, -0.8 * s, feature.yaw);
+  addBox(builder, feature.x + chimney.x, feature.y + 3.25 * s, feature.z + chimney.z, 0.42 * s, 0.92 * s, 0.42 * s, COLORS.deadWood, feature.yaw);
+}
+
+function addBlacksmith(builder, feature) {
+  const s = feature.scale;
+  addBox(builder, feature.x, feature.y + 1.05 * s, feature.z, 4.5 * s, 2.1 * s, 3.7 * s, COLORS.wall, feature.yaw);
+  addGableRoof(builder, feature.x, feature.y + 2.1 * s, feature.z, 5.05 * s, 1.25 * s, 4.25 * s, COLORS.blacksmithRoof, feature.yaw);
+  const forge = transformLocal(-2.7 * s, 0.4 * s, feature.yaw);
+  addBox(builder, feature.x + forge.x, feature.y + 0.72 * s, feature.z + forge.z, 1.3 * s, 1.45 * s, 1.35 * s, COLORS.rock, feature.yaw);
+  const chimney = transformLocal(1.45 * s, -0.75 * s, feature.yaw);
+  addBox(builder, feature.x + chimney.x, feature.y + 3.1 * s, feature.z + chimney.z, 0.55 * s, 1.45 * s, 0.55 * s, COLORS.blacksmithRoof, feature.yaw);
+}
+
+function addFarm(builder, feature) {
+  const s = feature.scale;
+  addBox(builder, feature.x, feature.y + 0.04 * s, feature.z, 5.2 * s, 0.08 * s, 3.9 * s, COLORS.soil, feature.yaw);
+  for (const offset of [-1.45, 0, 1.45]) {
+    const row = transformLocal(offset * s, 0, feature.yaw);
+    addBox(builder, feature.x + row.x, feature.y + 0.16 * s, feature.z + row.z, 0.55 * s, 0.2 * s, 3.5 * s, COLORS.farm, feature.yaw);
+  }
+  const postA = transformLocal(-2.8 * s, -2.1 * s, feature.yaw);
+  const postB = transformLocal(2.8 * s, 2.1 * s, feature.yaw);
+  addBox(builder, feature.x + postA.x, feature.y + 0.48 * s, feature.z + postA.z, 0.22 * s, 0.96 * s, 0.22 * s, COLORS.bark, feature.yaw);
+  addBox(builder, feature.x + postB.x, feature.y + 0.48 * s, feature.z + postB.z, 0.22 * s, 0.96 * s, 0.22 * s, COLORS.bark, feature.yaw);
+}
+
+function addSnowHouse(builder, feature) {
+  const s = feature.scale;
+  addBox(builder, feature.x, feature.y + 1.0 * s, feature.z, 3.4 * s, 2.0 * s, 3.0 * s, COLORS.iceShadow, feature.yaw);
+  addGableRoof(builder, feature.x, feature.y + 2.0 * s, feature.z, 4.0 * s, 1.15 * s, 3.7 * s, COLORS.snowRoof, feature.yaw);
+  const doorForward = transformLocal(0, -1.62 * s, feature.yaw);
+  addBox(builder, feature.x + doorForward.x, feature.y + 0.64 * s, feature.z + doorForward.z, 0.68 * s, 1.28 * s, 0.18 * s, COLORS.deadWood, feature.yaw);
+}
+
+function addSnowFarm(builder, feature) {
+  const s = feature.scale;
+  addBox(builder, feature.x, feature.y + 0.05 * s, feature.z, 5.0 * s, 0.1 * s, 3.6 * s, COLORS.snow, feature.yaw);
+  for (const offset of [-1.25, 1.25]) {
+    const row = transformLocal(offset * s, 0, feature.yaw);
+    addBox(builder, feature.x + row.x, feature.y + 0.18 * s, feature.z + row.z, 0.55 * s, 0.24 * s, 3.1 * s, COLORS.iceShadow, feature.yaw);
+  }
 }
 
 function addIgloo(builder, feature) {

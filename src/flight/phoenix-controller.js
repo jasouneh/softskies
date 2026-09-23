@@ -9,11 +9,29 @@ export function createPhoenixController(options = {}) {
   return new PhoenixController(options);
 }
 
+function createRandomStart(config, getTerrainHeight) {
+  const radius = config.startRadius ?? 0;
+  if (radius <= 0) {
+    return { x: 0, y: config.startAltitude, z: 0 };
+  }
+
+  const angle = Math.random() * Math.PI * 2;
+  const distance = Math.sqrt(Math.random()) * radius;
+  const x = Math.cos(angle) * distance;
+  const z = Math.sin(angle) * distance;
+  return {
+    x,
+    y: getTerrainHeight(x, z) + config.startAltitude,
+    z,
+  };
+}
+
 export class PhoenixController {
   constructor({ config = FLIGHT_CONFIG, getTerrainHeight = () => 0 } = {}) {
     this.config = config;
     this.getTerrainHeight = getTerrainHeight;
-    this.position = new THREE.Vector3(0, config.startAltitude, 0);
+    const start = createRandomStart(config, getTerrainHeight);
+    this.position = new THREE.Vector3(start.x, start.y, start.z);
     this.quaternion = new THREE.Quaternion();
     this.euler = new THREE.Euler(0, 0, 0, "YXZ");
     this.pitch = -0.04;

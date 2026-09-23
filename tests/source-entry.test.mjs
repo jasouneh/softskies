@@ -45,6 +45,19 @@ test("source entry imports Three.js through the project boundary and wires cloud
   assert.match(threeBoundary, /https:\/\/cdn\.jsdelivr\.net\/npm\/three@0\.170\.0\/build\/three\.module\.js/);
 });
 
+test("flight starts from a random terrain-safe map position", async () => {
+  const [config, controller] = await Promise.all([
+    readProjectFile("src/config/game.js"),
+    readProjectFile("src/flight/phoenix-controller.js"),
+  ]);
+
+  assert.match(config, /startRadius: 4200/);
+  assert.match(controller, /Math\.random\(\) \* Math\.PI \* 2/);
+  assert.match(controller, /Math\.sqrt\(Math\.random\(\)\) \* radius/);
+  assert.match(controller, /getTerrainHeight\(x, z\) \+ config\.startAltitude/);
+  assert.doesNotMatch(controller, /new THREE\.Vector3\(0, config\.startAltitude, 0\)/);
+});
+
 test("phoenix source stays procedural and wires bounded fire and boost wind effects", async () => {
   const [source, phoenix] = await Promise.all([
     readProjectFile("src/main.js"),
@@ -64,6 +77,9 @@ test("phoenix source stays procedural and wires bounded fire and boost wind effe
   assert.match(phoenix, /getWingClimbTarget/);
   assert.match(phoenix, /getWingTurnTarget/);
   assert.match(phoenix, /actionIntensity/);
+  assert.match(phoenix, /levelFlightTime > 1\.15/);
+  assert.match(phoenix, /\* 0\.75/);
+  assert.match(phoenix, /trailLength = 9\.1/);
   assert.doesNotMatch(phoenix, /pose\.speed > 58/);
   assert.match(phoenix, /boost wingtip wind animation/);
   assert.match(phoenix, /WIND_STREAKS_PER_SIDE = 5/);
