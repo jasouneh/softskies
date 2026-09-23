@@ -29,6 +29,7 @@ export const MATERIAL_NAMES = Object.freeze([
 
 export const FLIGHT_CONFIG = Object.freeze({
   startAltitude: 86,
+  startRadius: 4200,
   minTerrainClearance: 24,
   baseSpeed: 30,
   boostSpeed: 50,

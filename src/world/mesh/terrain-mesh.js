@@ -71,7 +71,7 @@ export function disposeTerrainMaterialPalette(materials) {
 }
 
 function resolveCellMaterial(...samples) {
-  const water = samples.reduce((max, sample) => Math.max(max, sample.riverStrength), 0);
+  const water = samples.reduce((max, sample) => Math.max(max, sample.waterStrength ?? sample.riverStrength), 0);
   if (water > 0.2) {
     return MATERIAL_IDS.river;
   }

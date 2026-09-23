@@ -19,6 +19,20 @@ test("house wall and roof triangles face outward for browser front-side renderin
   assertTrianglesFaceAway(geometry.positions, HOUSE_WALL_TRIANGLES, HOUSE_ROOF_TRIANGLES, roofCenter, "roof");
 });
 
+test("village specialty features generate low-poly geometry", () => {
+  const features = [
+    { type: "blacksmith", x: 0, y: 1, z: 0, yaw: 0.2, scale: 1 },
+    { type: "farm", x: 8, y: 1, z: 0, yaw: 0.4, scale: 1 },
+    { type: "snow-house", x: 16, y: 1, z: 0, yaw: 0.6, scale: 1 },
+    { type: "snow-farm", x: 24, y: 1, z: 0, yaw: 0.8, scale: 1 },
+  ];
+  const geometry = createDressingGeometryData({ key: "village-detail-test", features });
+
+  assert.ok(geometry.positions.length > 0);
+  assert.equal(geometry.positions.length % 9, 0);
+  assert.equal(geometry.colors.length, geometry.positions.length);
+});
+
 test("tree trunk and leaf triangles face outward for browser front-side rendering", () => {
   const feature = { type: "tree", x: -5, y: 2, z: 7, yaw: 1.12, scale: 0.9 };
   const geometry = createDressingGeometryData({ key: "tree-test", features: [feature] });

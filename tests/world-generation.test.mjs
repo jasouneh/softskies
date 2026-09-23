@@ -52,6 +52,20 @@ test("river sampling is deterministic and seed-sensitive", () => {
   );
 });
 
+test("lakes are deterministic and can stand alone or meet rivers", () => {
+  const isolated = generateTerrainChunk(WORLD_SEED, -8, -6);
+  const connected = generateTerrainChunk(WORLD_SEED, 1, 2);
+
+  assert.ok(isolated.lakes.length > 0, "some chunks should expose lake influence records");
+  assert.ok(connected.lakes.some((lake) => lake.connected), "some generated lakes should connect into river corridors");
+  assert.ok(isolated.samples.some((sample) => sample.lakeStrength > 0.24 && sample.riverStrength === 0), "lakes should appear away from rivers too");
+  assert.ok([...isolated.samples, ...connected.samples]
+    .filter((sample) => sample.lakeStrength > 0.24)
+    .every((sample) => sample.mountain < 0.23 && sample.slope < 0.34 && sample.height < 37),
+  "lake water should stay in low, gentle basins instead of climbing hillsides");
+  assert.deepEqual(generateTerrainChunk(WORLD_SEED, -8, -6).lakes, isolated.lakes);
+});
+
 test("visible river materials stay in lowland valleys on gentle terrain", () => {
   let riverSamples = 0;
   let bankSamples = 0;
@@ -92,7 +106,7 @@ test("chunk dressing is deterministic and bounded", () => {
   assert.deepEqual(repeated, plains);
   assert.ok(plains.features.length <= plains.stats.maxFeatures);
   assert.ok(snow.features.length <= snow.stats.maxFeatures);
-  assert.ok(plains.stats.counts.tree + plains.stats.counts.house > 0, "plains should gain trees or homes");
-  assert.ok(snow.stats.counts["dead-tree"] + snow.stats.counts.igloo > 0, "snow chunks should gain dead trees or igloos");
+  assert.ok(plains.stats.counts.tree + plains.stats.counts.house + plains.stats.counts.blacksmith + plains.stats.counts.farm > 0, "plains should gain trees, homes, blacksmiths, or farms");
+  assert.ok(snow.stats.counts["dead-tree"] + snow.stats.counts.igloo + snow.stats.counts["snow-house"] + snow.stats.counts["snow-farm"] > 0, "snow chunks should gain dead trees, igloos, or snow village features");
   assert.ok([...plains.features, ...snow.features].every((feature) => Number.isFinite(feature.x) && Number.isFinite(feature.y) && Number.isFinite(feature.z)));
 });

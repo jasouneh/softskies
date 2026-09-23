@@ -1,5 +1,6 @@
 import { MATERIAL_IDS, MATERIAL_NAMES, WORLD_CONFIG, WORLD_SEED } from "../../config/game.js";
 import { sampleBaseTerrain } from "./base-terrain.js";
+import { sampleLake, listChunkLakeInfluences } from "./lakes.js";
 import { normalizeSeed, smoothstep } from "./noise.js";
 import { listChunkRiverInfluences, sampleRiver } from "./rivers.js";
 
@@ -8,20 +9,36 @@ export function sampleTerrain(seed = WORLD_SEED, worldX = 0, worldZ = 0) {
   const base = sampleBaseTerrain(seedHash, worldX, worldZ);
   const { plains, mountain: massif, slopeProxy } = base;
   const rawRiver = sampleRiver(seedHash, worldX, worldZ);
+  const rawLake = sampleLake(seedHash, worldX, worldZ);
   const lowlandFactor = (1 - smoothstep(0.16, 0.34, massif)) * (1 - smoothstep(34, 50, base.height));
   const gentleBankFactor = 1 - smoothstep(0.34, 0.58, slopeProxy);
   const riverStrength = rawRiver.strength * lowlandFactor * gentleBankFactor;
-  const bankStrength = rawRiver.bankStrength * lowlandFactor * gentleBankFactor;
-  const riverCut = bankStrength * 2.2 + riverStrength * 3.4;
-  const height = base.height - riverCut;
+  const riverBankStrength = rawRiver.bankStrength * lowlandFactor * gentleBankFactor;
+  const lakeLowlandFactor = (1 - smoothstep(0.1, 0.22, massif)) * (1 - smoothstep(26, 36, base.height));
+  const lakeGentleFactor = 1 - smoothstep(0.18, 0.32, slopeProxy);
+  const lakeLevelFactor = 1 - smoothstep(5, 11, Math.abs(base.height - rawLake.level));
+  const lakeSuitability = lakeLowlandFactor * lakeGentleFactor * lakeLevelFactor;
+  const lakeStrength = rawLake.strength * lakeSuitability;
+  const lakeBankStrength = rawLake.bankStrength * lakeSuitability;
+  const waterStrength = Math.max(riverStrength, lakeStrength);
+  const bankStrength = Math.max(riverBankStrength, lakeBankStrength);
+  const riverCut = riverBankStrength * 2.2 + riverStrength * 3.4;
+  const lakeCut = lakeBankStrength * 1.6 + lakeStrength * 4.8;
+  const height = base.height - Math.max(riverCut, lakeCut);
 
   const river = {
     ...rawRiver,
     strength: riverStrength,
-    bankStrength,
+    bankStrength: riverBankStrength,
     isRiver: riverStrength > 0,
   };
-  const material = chooseMaterial({ height, massif, river, slopeProxy, plains });
+  const lake = {
+    ...rawLake,
+    strength: lakeStrength,
+    bankStrength: lakeBankStrength,
+    isLake: lakeStrength > 0,
+  };
+  const material = chooseMaterial({ height, massif, waterStrength, bankStrength, slopeProxy, plains });
 
   return {
     height,
@@ -31,6 +48,12 @@ export function sampleTerrain(seed = WORLD_SEED, worldX = 0, worldZ = 0) {
     riverDistance: river.distance,
     riverWidth: river.width,
     riverBankStrength: river.bankStrength,
+    lakeStrength: lake.strength,
+    lakeDistance: lake.distance,
+    lakeRadius: lake.radius,
+    lakeBankStrength: lake.bankStrength,
+    waterStrength,
+    waterBankStrength: bankStrength,
     mountain: massif,
     slope: slopeProxy,
   };
@@ -56,7 +79,7 @@ export function generateTerrainChunk(seed = WORLD_SEED, chunkX = 0, chunkZ = 0, 
       minHeight = Math.min(minHeight, sample.height);
       maxHeight = Math.max(maxHeight, sample.height);
       materialCounts[sample.materialName] += 1;
-      if (sample.riverStrength > 0) {
+      if (sample.waterStrength > 0) {
         riverSamples += 1;
       }
     }
@@ -72,6 +95,7 @@ export function generateTerrainChunk(seed = WORLD_SEED, chunkX = 0, chunkZ = 0, 
     step,
     samples,
     rivers: listChunkRiverInfluences(seed, chunkX, chunkZ, { chunkSize }),
+    lakes: listChunkLakeInfluences(seed, chunkX, chunkZ, { chunkSize }),
     stats: {
       minHeight,
       maxHeight,
@@ -104,12 +128,12 @@ export function getChunkBorderHeights(chunk, side) {
   return values;
 }
 
-function chooseMaterial({ height, massif, river, slopeProxy, plains }) {
-  if (river.strength > 0.24) {
+function chooseMaterial({ height, massif, waterStrength, bankStrength, slopeProxy, plains }) {
+  if (waterStrength > 0.24) {
     return MATERIAL_IDS.river;
   }
 
-  if (river.bankStrength > 0.18 || river.strength > 0.05) {
+  if (bankStrength > 0.18 || waterStrength > 0.05) {
     return MATERIAL_IDS.sand;
   }
 
