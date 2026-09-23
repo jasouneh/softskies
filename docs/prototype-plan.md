@@ -39,7 +39,8 @@ Start with small browser modules under `src/`; keep module APIs narrow so they c
 - `src/world/mesh/dressing-geometry.js`: pure procedural prop geometry/vertex-color data for trees, houses, dead trees, and igloos; keep winding testable without WebGL.
 - `src/world/mesh/dressing-mesh.js`: wraps dressing geometry data in flat-shaded Three.js buffers and disposes it.
 - `src/atmosphere/sky.js`: simple palette interpolation, low-poly sun/moon meshes, fog color, and ambient/directional light updates.
-- `src/atmosphere/clouds.js`: later generated cloud layers/cloud sea; independent of terrain source data.
+- `src/atmosphere/cloud-cells.js`: deterministic large cloud-cell and puff placement, independent of terrain source data.
+- `src/atmosphere/clouds.js`: bounded low-poly generated cloud layer mesh/instances, with room to expand into a cloud sea later.
 - `src/atmosphere/stars.js`: later stylized star/Milky Way dome; driven by a simple night factor, not full astronomy.
 - `src/ui/hud.js`: lightweight in-browser instructions and debug stats for flight tuning and streaming budgets.
 - `src/config/*.js`: tunable constants for seed, chunk size, draw radius, speed, palette, and performance budgets.
@@ -104,7 +105,7 @@ Stage atmosphere in layers:
 1. **Palette sky:** background/fog/light colors interpolate over a simple normalized day phase.
 2. **Sun/moon markers:** low-poly discs or simple meshes parented to a sky rig; no true astronomy.
 3. **Terrain material bands:** plains, mountain rock, snow caps/bands, and river colors from generated material IDs.
-4. **Cloud layer/cloud sea:** generated billboard/mesh clusters with deterministic placement by large cloud cells; keep independent from terrain chunks.
+4. **Cloud layer/cloud sea:** generated billboard/mesh clusters with deterministic placement by large cloud cells; keep independent from terrain chunks. The v1 layer uses bounded low-poly puff clusters and can expand toward denser cloud seas later.
 5. **Stars/Milky Way:** stylized point/dome layer enabled by night factor. Keep data procedural and cheap; avoid high-resolution textures unless a later decision allows assets.
 
 Use flat shading, limited palettes, and geometry silhouettes before textures. Prefer material reuse and instancing where it reduces draw calls without obscuring simple code.
@@ -133,6 +134,7 @@ Keep the current structural checks and add focused tests as modules appear:
 - Streaming tests: loaded chunk keys stay within `MAX_CHUNKS` and evicted chunks call disposal hooks.
 - Dressing geometry tests: generated prop faces that rely on front-side rendering keep outward triangle winding.
 - Input tests: key/pointer snapshots map to stable normalized intents.
+- Cloud generation tests: default seed/view produces visible bounded puffs, remains deterministic, and is seed-sensitive.
 - Browser smoke tests can be added later only if the dependency cost is justified.
 
 ## GitHub Pages base-path handling
@@ -146,8 +148,8 @@ Keep the current structural checks and add focused tests as modules appear:
 ## Milestones
 
 1. **Foundation (landed):** source page, Three.js boundary, generated bundle, tests, Pages workflow, and this plan.
-2. **First playable slice (current):** renderer/loop modules, procedural phoenix, chase camera, pointer-lock mouse/WASD flight, bounded deterministic terrain chunks, plains/mountains/lowland rivers, procedural chunk dressing, focused generation/streaming tests, and a lightweight day/night atmosphere.
-3. **Flight and world tuning:** tune speed/turn/camera feel, terrain scale, river readability, and draw-call/triangle budgets through browser smoke passes.
-4. **Cloud layer/cloud sea:** add deterministic generated cloud cells independent of terrain chunks.
+2. **First playable slice (current):** renderer/loop modules, procedural phoenix, chase camera, pointer-lock mouse/WASD flight, bounded deterministic terrain chunks, plains/mountains/lowland rivers, procedural chunk dressing, focused generation/streaming/cloud tests, a lightweight day/night atmosphere, and the first bounded deterministic cloud layer.
+3. **Flight and world tuning:** tune speed/turn/camera feel, terrain scale, river/cloud readability, and draw-call/triangle budgets through browser smoke passes.
+4. **Cloud layer/cloud sea expansion:** tune/expand deterministic generated cloud cells independent of terrain chunks.
 5. **Stylized night sky:** add cheap procedural stars/Milky Way styling driven by the existing night factor.
 6. **Pages hardening:** production base-path smoke check, performance budget review, README screenshots/GIF only if generated or explicitly licensed later.

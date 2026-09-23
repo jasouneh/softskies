@@ -55,5 +55,29 @@ export const CAMERA_CONFIG = Object.freeze({
 
 export const ATMOSPHERE_CONFIG = Object.freeze({
   dayLengthSeconds: 180,
+  timeScale: 0.5,
   startPhase: 0.34,
+});
+
+export const CLOUD_CONFIG = Object.freeze({
+  cellSize: 520,
+  cellRadius: 2,
+  maxCells: 25,
+  density: 0.72,
+  altitude: 138,
+  altitudeJitter: 24,
+  verticalSpread: 12,
+  clusterRadius: 90,
+  minPuffsPerCell: 3,
+  maxPuffsPerCell: 6,
+  maxPuffs: 144,
+  minPuffRadiusX: 18,
+  maxPuffRadiusX: 42,
+  minPuffRadiusY: 7,
+  maxPuffRadiusY: 16,
+  minPuffRadiusZ: 15,
+  maxPuffRadiusZ: 34,
+  driftSpeed: 1.6,
+  driftDirection: 0.62,
+  opacity: 0.86,
 });

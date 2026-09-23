@@ -1,4 +1,5 @@
 import * as THREE from "./platform/three.js";
+import { createCloudLayer } from "./atmosphere/clouds.js";
 import { createAtmosphere } from "./atmosphere/sky.js";
 import { createChaseCamera } from "./camera/chase-camera.js";
 import { WORLD_CONFIG, WORLD_SEED } from "./config/game.js";
@@ -42,6 +43,7 @@ export function createPolyFlyShell({ mountNode = document.body } = {}) {
   });
   const controls = createFlightControls({ domElement: renderer.domElement });
   const atmosphere = createAtmosphere(scene);
+  const cloudLayer = createCloudLayer(scene);
   const terrainMaterials = createTerrainMaterialPalette();
   const dressingMaterial = createDressingMaterial();
 
@@ -76,6 +78,12 @@ export function createPolyFlyShell({ mountNode = document.body } = {}) {
   });
 
   let atmosphereState = atmosphere.update(0, { camera });
+  let cloudState = cloudLayer.update({
+    camera,
+    playerPosition: controller.getPose().position,
+    elapsed: playableElapsed,
+    atmosphere: atmosphereState,
+  });
   chunks.update(controller.getPose().position);
 
   function revealHud() {
@@ -118,6 +126,12 @@ export function createPolyFlyShell({ mountNode = document.body } = {}) {
         phoenix.update(dt, playableElapsed, updatedPose);
         chaseCamera.update(dt, updatedPose, { boost: intent.boost });
         atmosphereState = atmosphere.update(playableElapsed, { camera });
+        cloudState = cloudLayer.update({
+          camera,
+          playerPosition: updatedPose.position,
+          elapsed: playableElapsed,
+          atmosphere: atmosphereState,
+        });
       }
 
       hud.update({
@@ -125,6 +139,7 @@ export function createPolyFlyShell({ mountNode = document.body } = {}) {
         terrainHeight,
         chunkStats: chunks.getStats(),
         atmosphere: atmosphereState,
+        clouds: cloudState,
         pointerLocked: intent.pointerLocked,
         paused,
       });
@@ -149,6 +164,7 @@ export function createPolyFlyShell({ mountNode = document.body } = {}) {
       document.removeEventListener("mousemove", revealHud);
       document.removeEventListener("keydown", handlePauseKey);
       chunks.disposeAll();
+      cloudLayer.dispose();
       disposeTerrainMaterialPalette(terrainMaterials);
       disposeDressingMaterial(dressingMaterial);
       hud.dispose();

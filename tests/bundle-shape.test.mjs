@@ -32,6 +32,8 @@ test("generated bundle has the GitHub Pages-ready static shape", async () => {
   assert.equal(parsedManifest.bundle, "assets/polyfly.js");
   assert.ok(parsedManifest.copiedModules.includes("engine/loop.js"));
   assert.ok(parsedManifest.copiedModules.includes("world/generation/terrain.js"));
+  assert.ok(parsedManifest.copiedModules.includes("atmosphere/clouds.js"));
+  assert.ok(parsedManifest.copiedModules.includes("atmosphere/cloud-cells.js"));
   assert.deepEqual(parsedManifest.externalModules, ["https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js"]);
 });
 

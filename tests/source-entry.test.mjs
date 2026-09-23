@@ -16,11 +16,14 @@ test("source page points at the native browser module entry", async () => {
   assert.doesNotMatch(html, /dist\//, "source page should not reference generated output");
 });
 
-test("source entry imports Three.js through the project boundary", async () => {
+test("source entry imports Three.js through the project boundary and wires clouds", async () => {
   const source = await readProjectFile("src/main.js");
   const threeBoundary = await readProjectFile("src/platform/three.js");
 
   assert.match(source, /import \* as THREE from "\.\/platform\/three\.js";/);
+  assert.match(source, /import \{ createCloudLayer \} from "\.\/atmosphere\/clouds\.js";/);
+  assert.match(source, /const cloudLayer = createCloudLayer\(scene\);/);
+  assert.match(source, /cloudLayer\.update/);
   assert.match(source, /export function createPolyFlyShell/);
   assert.match(source, /export function mountPolyFlyShell/);
   assert.match(threeBoundary, /THREE_VERSION = "0\.170\.0"/);

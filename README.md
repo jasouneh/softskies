@@ -13,6 +13,7 @@ This repository currently contains the first playable vertical slice. It include
 - deterministic chunked terrain streaming with explicit `MAX_CHUNKS` bounds and disposal hooks;
 - bright low-poly plains, stylized mountains, simple snow caps, valley-following lowland river channels, and procedural trees/houses/dead trees/igloos from deterministic generation;
 - a lightweight day/night cycle with palette changes plus low-poly sun and moon markers;
+- a deterministic low-poly cloud layer generated from bounded large cloud cells independent of terrain chunks;
 - a dependency-light Node build script that generates an ignored `dist/` static site bundle; and
 - source, deterministic generation, streaming, and bundle-shape validation tests.
 
@@ -22,7 +23,7 @@ This repository currently contains the first playable vertical slice. It include
 - Third-person always-flying controls: mouse-look plus WASD-style flight input, with no walking or landing yet.
 - Infinite deterministic terrain streaming from procedural source data: bright plains, stylized mountains, snow bands on peaks, and decorative rivers.
 - Free-flight exploration only; no goals, score loop, or combat in the first playable slice.
-- Architecture kept open for a simple day/night cycle, low-poly sun/moon palettes, cloud layers or cloud sea, and later star/Milky Way styling without implementing heavyweight astronomy early.
+- Architecture kept open for a simple day/night cycle, low-poly sun/moon palettes, an expandable cloud layer/cloud sea, and later star/Milky Way styling without implementing heavyweight astronomy early.
 
 ## Local commands
 
@@ -40,8 +41,8 @@ node scripts/build.mjs
 # Build with the GitHub Pages project base path.
 BASE_PATH=/polyFly/ node scripts/build.mjs
 
-# Validate source structure, deterministic generation, streaming, and bundle shape.
-node --test tests/source-entry.test.mjs tests/world-generation.test.mjs tests/chunk-coordinator.test.mjs tests/dressing-geometry.test.mjs
+# Validate source structure, deterministic generation, streaming, clouds, and bundle shape.
+node --test tests/source-entry.test.mjs tests/world-generation.test.mjs tests/chunk-coordinator.test.mjs tests/dressing-geometry.test.mjs tests/cloud-cells.test.mjs
 node scripts/build.mjs && node --test tests/bundle-shape.test.mjs
 # or: npm run validate
 
@@ -59,7 +60,7 @@ See [`docs/prototype-plan.md`](docs/prototype-plan.md) for module boundaries, da
 ## Roadmap
 
 1. Tune flight feel, camera smoothing, and low-poly phoenix/world-dressing silhouettes from browser playtesting.
-2. Add lightweight deterministic cloud layers or a cloud sea without coupling them to terrain chunks.
+2. Tune the lightweight deterministic cloud layer and expand toward a cloud sea without coupling it to terrain chunks.
 3. Expand terrain material bands, including more deliberate snow bands, cliff accents, and river transitions.
 4. Add a procedural stylized stars/Milky Way layer driven by the existing night factor.
 5. Harden performance budgets, browser smoke checks, and GitHub Pages deployment.

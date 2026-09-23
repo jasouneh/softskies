@@ -39,7 +39,7 @@ export function createAtmosphere(scene, { config = ATMOSPHERE_CONFIG } = {}) {
   skyRig.add(moon);
 
   const cloudHook = new THREE.Group();
-  cloudHook.name = "future deterministic cloud layer hook";
+  cloudHook.name = "deterministic cloud layer extension hook";
   skyRig.add(cloudHook);
 
   const starHook = new THREE.Group();
@@ -54,7 +54,8 @@ export function createAtmosphere(scene, { config = ATMOSPHERE_CONFIG } = {}) {
   const tmpColorB = new THREE.Color();
 
   function update(elapsed, { camera } = {}) {
-    const phase = (config.startPhase + elapsed / config.dayLengthSeconds) % 1;
+    const timeScale = config.timeScale ?? 1;
+    const phase = (config.startPhase + (elapsed * timeScale) / config.dayLengthSeconds) % 1;
     const palette = samplePalette(phase, tmpColorA, tmpColorB);
     skyColor.copy(palette.sky);
     fogColor.copy(palette.fog);
