@@ -52,13 +52,15 @@ test("night sky stays procedural, bounded, and wired into the atmosphere", async
   ]);
 
   assert.match(sky, /createNightSky\(starHook\)/);
-  assert.match(stars, /MILKY_WAY_BAND_STARS = 760/);
-  assert.match(stars, /createMilkyWayRibbon/);
-  assert.match(stars, /createMilkyWayCoreGlow/);
+  assert.match(stars, /MILKY_WAY_BAND_STARS = 620/);
+  assert.match(stars, /createMilkyWayHaze/);
+  assert.match(stars, /ShaderMaterial/);
+  assert.match(stars, /soft layered sky-bound procedural Milky Way haze/);
   assert.match(stars, /MILKY_WAY_CORE_LONGITUDE = 0\.62/);
   assert.match(stars, /MILKY_WAY_CORE_LATITUDE = 0\.38/);
-  assert.match(stars, /coreGlow\.material\.opacity = 0\.22 \* visibility/);
+  assert.match(stars, /milkyWayHaze\.material\.uniforms\.opacity\.value = visibility/);
   assert.doesNotMatch(stars, /depthTest: false/);
+  assert.doesNotMatch(stars, /createMilkyWayRibbon|createMilkyWayCoreGlow|CircleGeometry/);
   assert.match(stars, /procedural Milky Way/);
   assert.doesNotMatch(stars, /https?:\/\//);
   assert.doesNotMatch(stars, /TextureLoader|DataTextureLoader|ImageBitmapLoader/);
