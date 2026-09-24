@@ -16,6 +16,7 @@ const BIOME_COLORS = {
   rainforest: new THREE.Color(0x1f8f57),
   desert: new THREE.Color(0xd3ad5d),
   "desert-rock": new THREE.Color(0xaa8760),
+  "red-sand": new THREE.Color(0xc4694a),
   oasis: new THREE.Color(0x70b96a),
 };
 
@@ -99,6 +100,9 @@ function resolveCellColor(samples, materialIndex) {
 
   const biome = majorityBiome(samples);
   if (biome === "desert") {
+    if (samples.some((sample) => (sample.redSandStrength ?? 0) > 0.35)) {
+      return BIOME_COLORS["red-sand"];
+    }
     return materialIndex === MATERIAL_IDS.rock ? BIOME_COLORS["desert-rock"] : BIOME_COLORS.desert;
   }
   if (biome === "rainforest") {

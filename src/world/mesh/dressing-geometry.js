@@ -19,6 +19,10 @@ const COLORS = Object.freeze({
   sandstone: colorFromHex(0xc59a5b),
   sunbakedCloth: colorFromHex(0xd97244),
   campfire: colorFromHex(0xffb347),
+  cactus: colorFromHex(0x5b9855),
+  cactusFlower: colorFromHex(0xffd37a),
+  waterfall: colorFromHex(0x67cfff),
+  waterfallFoam: colorFromHex(0xd9f7ff),
 });
 
 export function createDressingGeometryData(dressing) {
@@ -55,6 +59,10 @@ export function createDressingGeometryData(dressing) {
       addDesertCamp(builder, feature);
     } else if (feature.type === "desert-ruin") {
       addDesertRuin(builder, feature);
+    } else if (feature.type === "cactus") {
+      addCactus(builder, feature);
+    } else if (feature.type === "waterfall") {
+      addWaterfall(builder, feature);
     }
   }
 
@@ -78,18 +86,28 @@ function addTree(builder, feature) {
 
 function addJungleTree(builder, feature) {
   const s = feature.scale;
-  addBox(builder, feature.x, feature.y + 1.55 * s, feature.z, 0.5 * s, 3.1 * s, 0.5 * s, COLORS.bark, feature.yaw);
-  addCone(builder, feature.x, feature.y + 2.25 * s, feature.z, 2.05 * s, 2.6 * s, 7, COLORS.jungleLeaf, feature.yaw + 0.24);
-  addCone(builder, feature.x, feature.y + 3.45 * s, feature.z, 1.48 * s, 2.2 * s, 7, COLORS.leafLight, feature.yaw - 0.22);
+  addBox(builder, feature.x, feature.y + 2.45 * s, feature.z, 0.58 * s, 4.9 * s, 0.58 * s, COLORS.bark, feature.yaw);
+  addCone(builder, feature.x, feature.y + 3.55 * s, feature.z, 2.65 * s, 3.0 * s, 8, COLORS.jungleLeaf, feature.yaw + 0.24);
+  addCone(builder, feature.x, feature.y + 4.85 * s, feature.z, 2.05 * s, 2.55 * s, 8, COLORS.leafLight, feature.yaw - 0.22);
+  for (let index = 0; index < 5; index += 1) {
+    const angle = feature.yaw + (index / 5) * Math.PI * 2;
+    const leaf = transformLocal(0, -1.35 * s, angle);
+    addBox(builder, feature.x + leaf.x, feature.y + 5.1 * s, feature.z + leaf.z, 0.62 * s, 0.18 * s, 3.0 * s, COLORS.jungleLeaf, angle);
+  }
 }
 
 function addRainforestTree(builder, feature) {
   const s = feature.scale;
-  addBox(builder, feature.x, feature.y + 2.05 * s, feature.z, 0.58 * s, 4.1 * s, 0.58 * s, COLORS.bark, feature.yaw);
-  addCone(builder, feature.x, feature.y + 3.0 * s, feature.z, 2.35 * s, 2.7 * s, 8, COLORS.rainforestLeaf, feature.yaw);
-  addCone(builder, feature.x, feature.y + 4.15 * s, feature.z, 1.78 * s, 2.25 * s, 8, COLORS.jungleLeaf, feature.yaw + 0.32);
-  const vine = transformLocal(0.62 * s, 0.18 * s, feature.yaw);
-  addBox(builder, feature.x + vine.x, feature.y + 2.4 * s, feature.z + vine.z, 0.16 * s, 2.5 * s, 0.16 * s, COLORS.leaf, feature.yaw + 0.18);
+  addBox(builder, feature.x, feature.y + 3.1 * s, feature.z, 0.66 * s, 6.2 * s, 0.66 * s, COLORS.bark, feature.yaw);
+  addCone(builder, feature.x, feature.y + 4.7 * s, feature.z, 3.0 * s, 3.4 * s, 9, COLORS.rainforestLeaf, feature.yaw);
+  addCone(builder, feature.x, feature.y + 6.05 * s, feature.z, 2.2 * s, 2.7 * s, 9, COLORS.jungleLeaf, feature.yaw + 0.32);
+  const vine = transformLocal(0.72 * s, 0.18 * s, feature.yaw);
+  addBox(builder, feature.x + vine.x, feature.y + 3.1 * s, feature.z + vine.z, 0.18 * s, 4.2 * s, 0.18 * s, COLORS.leaf, feature.yaw + 0.18);
+  for (let index = 0; index < 4; index += 1) {
+    const angle = feature.yaw + Math.PI / 4 + (index / 4) * Math.PI * 2;
+    const root = transformLocal(0, -0.68 * s, angle);
+    addBox(builder, feature.x + root.x, feature.y + 0.38 * s, feature.z + root.z, 0.24 * s, 0.76 * s, 1.5 * s, COLORS.bark, angle);
+  }
 }
 
 function addDesertPalm(builder, feature) {
@@ -126,6 +144,27 @@ function addDesertCamp(builder, feature) {
   addGableRoof(builder, feature.x, feature.y + 0.14 * s, feature.z, 3.5 * s, 1.55 * s, 3.0 * s, COLORS.sunbakedCloth, feature.yaw);
   const fire = transformLocal(0, 2.25 * s, feature.yaw);
   addCone(builder, feature.x + fire.x, feature.y + 0.08 * s, feature.z + fire.z, 0.7 * s, 0.95 * s, 5, COLORS.campfire, feature.yaw);
+}
+
+function addCactus(builder, feature) {
+  const s = feature.scale;
+  addBox(builder, feature.x, feature.y + 1.35 * s, feature.z, 0.48 * s, 2.7 * s, 0.48 * s, COLORS.cactus, feature.yaw);
+  const armA = transformLocal(0.48 * s, 0, feature.yaw);
+  const armB = transformLocal(-0.48 * s, 0, feature.yaw);
+  addBox(builder, feature.x + armA.x, feature.y + 1.65 * s, feature.z + armA.z, 0.34 * s, 1.25 * s, 0.34 * s, COLORS.cactus, feature.yaw);
+  addBox(builder, feature.x + armA.x * 1.45, feature.y + 2.16 * s, feature.z + armA.z * 1.45, 0.86 * s, 0.28 * s, 0.32 * s, COLORS.cactus, feature.yaw);
+  addBox(builder, feature.x + armB.x, feature.y + 1.25 * s, feature.z + armB.z, 0.32 * s, 0.92 * s, 0.32 * s, COLORS.cactus, feature.yaw);
+  addBox(builder, feature.x, feature.y + 2.84 * s, feature.z, 0.28 * s, 0.16 * s, 0.28 * s, COLORS.cactusFlower, feature.yaw);
+}
+
+function addWaterfall(builder, feature) {
+  const s = feature.scale;
+  const direction = feature.yaw;
+  const drop = 4.0 * s;
+  const face = transformLocal(0, -0.18 * s, direction);
+  addBox(builder, feature.x + face.x, feature.y + 1.9 * s, feature.z + face.z, 2.2 * s, drop, 0.16 * s, COLORS.waterfall, direction);
+  addBox(builder, feature.x - face.x * 1.8, feature.y + 0.08 * s, feature.z - face.z * 1.8, 2.6 * s, 0.16 * s, 1.25 * s, COLORS.waterfallFoam, direction);
+  addBox(builder, feature.x + face.x * 1.1, feature.y + 3.95 * s, feature.z + face.z * 1.1, 2.35 * s, 0.18 * s, 0.36 * s, COLORS.waterfallFoam, direction);
 }
 
 function addDesertRuin(builder, feature) {

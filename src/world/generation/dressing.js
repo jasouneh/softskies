@@ -20,6 +20,8 @@ const FEATURE_TYPES = [
   "rainforest-shrine",
   "desert-camp",
   "desert-ruin",
+  "cactus",
+  "waterfall",
 ];
 
 export function generateChunkDressing(seed = WORLD_SEED, chunkX = 0, chunkZ = 0, {
@@ -150,12 +152,17 @@ function generateSunspiceChunkDressing(seed, chunkX, chunkZ, {
       const x = minX + (ix + 0.15 + hash2(seedHash ^ 0x51a7f00d, worldCellX, worldCellZ) * 0.7) * cellSize;
       const z = minZ + (iz + 0.15 + hash2(seedHash ^ 0xdec0de15, worldCellX, worldCellZ) * 0.7) * cellSize;
       const terrain = sampleTerrain(seed, x, z, { profile: "sunspice-wilds" });
+      const roll = hash2(seedHash ^ 0x57e11a, worldCellX, worldCellZ);
+      const density = forestDensity(seedHash, x, z);
+      if (isWaterfallGround(terrain) && roll < 0.055) {
+        pushFeature(features, counts, createSunspiceFeature(seedHash, "waterfall", terrain, x, z, worldCellX, worldCellZ, 0.88, 0.38), maxFeatures);
+        seenBiomes.add(terrain.biome);
+        continue;
+      }
       if (!isSunspiceDressingGround(terrain)) {
         continue;
       }
       seenBiomes.add(terrain.biome);
-      const roll = hash2(seedHash ^ 0x57e11a, worldCellX, worldCellZ);
-      const density = forestDensity(seedHash, x, z);
       if (terrain.biome === "desert") {
         addDesertDressing(seedHash, features, counts, terrain, x, z, worldCellX, worldCellZ, roll, maxFeatures);
       } else if (terrain.biome === "rainforest") {
@@ -188,7 +195,7 @@ function generateSunspiceChunkDressing(seed, chunkX, chunkZ, {
 function addJungleDressing(seedHash, features, counts, terrain, x, z, worldCellX, worldCellZ, roll, density, maxFeatures) {
   const treeChance = 0.32 + density * 0.42;
   if (roll < treeChance) {
-    pushFeature(features, counts, createSunspiceFeature(seedHash, "jungle-tree", terrain, x, z, worldCellX, worldCellZ, 0.86, 0.7), maxFeatures);
+    pushFeature(features, counts, createSunspiceFeature(seedHash, "jungle-tree", terrain, x, z, worldCellX, worldCellZ, 1.18, 0.78), maxFeatures);
   } else if (roll < treeChance + 0.09 && terrain.slope < 0.45) {
     pushFeature(features, counts, createSunspiceFeature(seedHash, "jungle-hut", terrain, x, z, worldCellX, worldCellZ, 0.9, 0.36), maxFeatures);
   }
@@ -197,19 +204,21 @@ function addJungleDressing(seedHash, features, counts, terrain, x, z, worldCellX
 function addRainforestDressing(seedHash, features, counts, terrain, x, z, worldCellX, worldCellZ, roll, density, maxFeatures) {
   const treeChance = 0.42 + density * 0.46;
   if (roll < treeChance) {
-    pushFeature(features, counts, createSunspiceFeature(seedHash, "rainforest-tree", terrain, x, z, worldCellX, worldCellZ, 0.95, 0.82), maxFeatures);
+    pushFeature(features, counts, createSunspiceFeature(seedHash, "rainforest-tree", terrain, x, z, worldCellX, worldCellZ, 1.34, 0.9), maxFeatures);
   } else if (roll < treeChance + 0.08 && terrain.slope < 0.5) {
     pushFeature(features, counts, createSunspiceFeature(seedHash, "rainforest-shrine", terrain, x, z, worldCellX, worldCellZ, 0.76, 0.32), maxFeatures);
   }
 }
 
 function addDesertDressing(seedHash, features, counts, terrain, x, z, worldCellX, worldCellZ, roll, maxFeatures) {
-  if (terrain.waterBankStrength > 0.1 && roll < 0.5) {
+  if (terrain.waterBankStrength > 0.1 && roll < 0.6) {
     pushFeature(features, counts, createSunspiceFeature(seedHash, "desert-palm", terrain, x, z, worldCellX, worldCellZ, 0.84, 0.48), maxFeatures);
   } else if (roll < 0.08 && terrain.slope < 0.58) {
     pushFeature(features, counts, createSunspiceFeature(seedHash, "desert-camp", terrain, x, z, worldCellX, worldCellZ, 0.86, 0.3), maxFeatures);
   } else if (roll < 0.16 && terrain.slope < 0.72) {
     pushFeature(features, counts, createSunspiceFeature(seedHash, "desert-ruin", terrain, x, z, worldCellX, worldCellZ, 0.76, 0.42), maxFeatures);
+  } else if (roll < 0.44 && terrain.slope < 0.74) {
+    pushFeature(features, counts, createSunspiceFeature(seedHash, "cactus", terrain, x, z, worldCellX, worldCellZ, 0.72, 0.66), maxFeatures);
   }
 }
 
@@ -226,9 +235,9 @@ function createSunspiceFeature(seedHash, type, terrain, x, z, worldCellX, worldC
 
 function addBiomeCluster(seedHash, seed, chunkX, chunkZ, chunkSize, biome, features, counts, maxFeatures, seenBiomes) {
   const structureTypes = {
-    jungle: ["jungle-hut", "jungle-tree", "jungle-tree"],
-    rainforest: ["rainforest-shrine", "rainforest-tree", "rainforest-tree"],
-    desert: ["desert-ruin", "desert-camp", "desert-palm"],
+    jungle: ["jungle-hut", "jungle-tree", "waterfall"],
+    rainforest: ["rainforest-shrine", "rainforest-tree", "waterfall"],
+    desert: ["desert-ruin", "desert-camp", "cactus"],
   };
   const primaryStructure = structureTypes[biome][0];
   const roll = hash2(seedHash ^ biomeSeed(biome), chunkX, chunkZ);
@@ -258,7 +267,7 @@ function addBiomeCluster(seedHash, seed, chunkX, chunkZ, chunkSize, biome, featu
       continue;
     }
     const terrain = sampleTerrain(seed, x, z, { profile: "sunspice-wilds" });
-    if (terrain.biome !== biome || !isSunspiceDressingGround(terrain)) {
+    if (terrain.biome !== biome || (type === "waterfall" ? !isWaterfallGround(terrain) : !isSunspiceDressingGround(terrain))) {
       continue;
     }
     pushFeature(features, counts, {
@@ -280,6 +289,14 @@ function isSunspiceDressingGround(terrain) {
   return terrain.waterStrength < 0.2
     && terrain.slope < (terrain.biome === "desert" ? 0.78 : 0.68)
     && terrain.material !== MATERIAL_IDS.river;
+}
+
+function isWaterfallGround(terrain) {
+  return (terrain.biome === "jungle" || terrain.biome === "rainforest")
+    && terrain.height > 18
+    && terrain.slope > 0.46
+    && terrain.slope < 0.82
+    && terrain.waterStrength < 0.18;
 }
 
 function forestDensity(seedHash, x, z) {

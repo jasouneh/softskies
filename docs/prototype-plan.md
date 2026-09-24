@@ -148,7 +148,7 @@ Keep the current structural checks and add focused tests as modules appear:
 ## Milestones
 
 1. **Foundation (landed):** source page, Three.js boundary, generated bundle, tests, Pages workflow, and this plan.
-2. **First playable slice (current):** renderer/loop modules, procedural phoenix, chase camera, pointer-lock mouse/WASD flight, bounded deterministic terrain chunks, selectable Classic Highlands and Sunspice Wilds maps, plains/mountains/lowland rivers, jungles/rainforests/hilly deserts, procedural chunk dressing, focused generation/streaming/cloud tests, a lightweight day/night atmosphere, and the first bounded deterministic cloud layer.
+2. **First playable slice (current):** renderer/loop modules, procedural phoenix, chase camera, pointer-lock mouse/WASD flight, bounded deterministic terrain chunks, selectable Classic Highlands and Sunspice Wilds maps, plains/mountains/lowland rivers, jungles/rainforests/waterfalls/hilly deserts/oases/red-sand patches, procedural chunk dressing, focused generation/streaming/cloud tests, a lightweight day/night atmosphere, and the first bounded deterministic cloud layer.
 3. **Flight and world tuning:** tune speed/turn/camera feel, terrain scale, river/cloud readability, and draw-call/triangle budgets through browser smoke passes.
 4. **Cloud layer/cloud sea expansion:** tune/expand deterministic generated cloud cells independent of terrain chunks.
 5. **Stylized night sky (landed):** cheap procedural stars/Milky Way styling driven by the existing night factor.

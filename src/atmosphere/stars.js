@@ -105,7 +105,6 @@ function createStarField(seed) {
     transparent: true,
     opacity: 0,
     depthWrite: false,
-    depthTest: false,
     vertexColors: true,
     blending: THREE.AdditiveBlending,
   });
@@ -130,7 +129,6 @@ function createMilkyWayCoreGlow() {
     transparent: true,
     opacity: 0,
     depthWrite: false,
-    depthTest: false,
     side: THREE.DoubleSide,
     blending: THREE.AdditiveBlending,
   });
@@ -176,7 +174,6 @@ function createMilkyWayRibbon({ name, width, radius, color }) {
     transparent: true,
     opacity: 0,
     depthWrite: false,
-    depthTest: false,
     side: THREE.DoubleSide,
     blending: THREE.AdditiveBlending,
   });

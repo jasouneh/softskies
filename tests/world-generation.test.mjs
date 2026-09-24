@@ -103,15 +103,39 @@ test("sunspice wilds map has jungle, rainforest, hilly desert, and themed struct
   const biomes = new Set();
   const structureCounts = new Map();
   let hillyDesertSamples = 0;
+  let wetBiomeWaterSamples = 0;
+  let oasisSamples = 0;
+  let desertChunks = 0;
+  let redSandChunks = 0;
 
   for (let chunkZ = -4; chunkZ <= 4; chunkZ += 1) {
     for (let chunkX = -4; chunkX <= 4; chunkX += 1) {
       const chunk = generateTerrainChunk(wilds.seed, chunkX, chunkZ, { ...WORLD_CONFIG, map: wilds });
+      let hasDesert = false;
+      let hasRedSand = false;
       for (const sample of chunk.samples) {
         biomes.add(sample.biome);
-        if (sample.biome === "desert" && (sample.height > 28 || sample.slope > 0.45)) {
-          hillyDesertSamples += 1;
+        if ((sample.biome === "jungle" || sample.biome === "rainforest") && sample.waterStrength > 0.05) {
+          wetBiomeWaterSamples += 1;
         }
+        if (sample.biome === "desert") {
+          hasDesert = true;
+          if (sample.height > 28 || sample.slope > 0.45) {
+            hillyDesertSamples += 1;
+          }
+          if (sample.waterStrength > 0.05) {
+            oasisSamples += 1;
+          }
+          if ((sample.redSandStrength ?? 0) > 0.35) {
+            hasRedSand = true;
+          }
+        }
+      }
+      if (hasDesert) {
+        desertChunks += 1;
+      }
+      if (hasRedSand) {
+        redSandChunks += 1;
       }
 
       const dressing = generateChunkDressing(wilds.seed, chunkX, chunkZ, { ...WORLD_CONFIG, map: wilds });
@@ -124,9 +148,14 @@ test("sunspice wilds map has jungle, rainforest, hilly desert, and themed struct
   assert.ok(biomes.has("jungle"));
   assert.ok(biomes.has("rainforest"));
   assert.ok(biomes.has("desert"));
+  assert.ok(wetBiomeWaterSamples > 200, "jungle and rainforest should retain coherent river/lake water features");
   assert.ok(hillyDesertSamples > 200, "desert biomes should include substantial hilly terrain");
+  assert.ok(oasisSamples > 20, "desert should include occasional oases");
+  assert.ok(redSandChunks / desertChunks >= 0.05 && redSandChunks / desertChunks <= 0.25, "red sand patches should be findable in about a tenth of desert regions");
   assert.ok((structureCounts.get("jungle-hut") ?? 0) > 0, "jungle should generate huts");
   assert.ok((structureCounts.get("rainforest-shrine") ?? 0) > 0, "rainforest should generate shrines");
+  assert.ok((structureCounts.get("waterfall") ?? 0) > 0, "hilly wet biomes should generate waterfalls");
+  assert.ok((structureCounts.get("cactus") ?? 0) > 0, "desert should generate cacti");
   assert.ok((structureCounts.get("desert-camp") ?? 0) + (structureCounts.get("desert-ruin") ?? 0) > 0, "desert should generate camps or ruins");
 });
 
