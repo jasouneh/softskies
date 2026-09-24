@@ -16,7 +16,7 @@ export function createRenderer({ root, clearColor = 0x7bd7ff } = {}) {
   root.append(renderer.domElement);
 
   const scene = new THREE.Scene();
-  scene.name = "SoftSkies playable scene";
+  scene.name = "Soft Skies playable scene";
   scene.background = new THREE.Color(clearColor);
   scene.fog = new THREE.Fog(0xbfeeff, 160, 760);
 
