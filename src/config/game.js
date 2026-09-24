@@ -1,5 +1,28 @@
 export const WORLD_SEED = "softskies-v1-launch";
 
+export const WORLD_MAPS = Object.freeze([
+  {
+    id: "classic-highlands",
+    label: "Classic Highlands",
+    description: "The original Soft Skies plains, rivers, villages, mountains, and snowfields.",
+    seed: WORLD_SEED,
+    terrainProfile: "highlands",
+  },
+  {
+    id: "sunspice-wilds",
+    label: "Sunspice Wilds",
+    description: "Jungles, rainforests, and hilly deserts with biome-themed ruins and villages.",
+    seed: "softskies-sunspice-wilds-v1",
+    terrainProfile: "sunspice-wilds",
+  },
+]);
+
+export const DEFAULT_MAP_ID = WORLD_MAPS[0].id;
+
+export function getWorldMap(mapId = DEFAULT_MAP_ID) {
+  return WORLD_MAPS.find((map) => map.id === mapId) ?? WORLD_MAPS[0];
+}
+
 export const WORLD_CONFIG = Object.freeze({
   chunkSize: 192,
   chunkSegments: 32,

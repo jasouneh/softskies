@@ -138,6 +138,100 @@
         object-fit: cover;
       }
 
+      .softskies-map-trigger {
+        display: inline-grid;
+        place-items: center;
+        width: 2rem;
+        padding: 0;
+      }
+
+      .softskies-map-icon {
+        width: 1.05rem;
+        height: 1.05rem;
+        filter: drop-shadow(0 0 0.28rem rgb(255 224 141 / 18%));
+      }
+
+      .softskies-map-backdrop {
+        position: fixed;
+        inset: 0;
+        z-index: 4;
+        display: grid;
+        place-items: center;
+        padding: 1.25rem;
+        pointer-events: none;
+      }
+
+      .softskies-map-panel {
+        width: min(28rem, calc(100vw - 2rem));
+        padding: 0.85rem;
+        border: 1px solid rgb(255 255 255 / 16%);
+        border-radius: 0.9rem;
+        background: rgb(12 24 34 / 82%);
+        box-shadow: 0 1.1rem 2.6rem rgb(0 0 0 / 35%);
+        backdrop-filter: blur(0.65rem);
+        pointer-events: auto;
+        animation: softskies-map-card-in 0.7s cubic-bezier(0.19, 1, 0.22, 1) both;
+      }
+
+      @keyframes softskies-map-card-in {
+        from {
+          opacity: 0;
+          transform: translateY(0.55rem) scale(0.985);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0) scale(1);
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .softskies-map-panel {
+          animation-duration: 0.01ms;
+        }
+      }
+
+      .softskies-map-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        margin-bottom: 0.68rem;
+      }
+
+      .softskies-map-title {
+        margin: 0;
+        font-size: 1rem;
+      }
+
+      .softskies-map-options {
+        display: grid;
+        gap: 0.5rem;
+      }
+
+      .softskies-map-option {
+        width: 100%;
+        padding: 0.64rem;
+        text-align: left;
+        cursor: pointer;
+      }
+
+      .softskies-map-option.is-selected {
+        border-color: rgb(255 224 141 / 52%);
+        background: rgb(255 206 103 / 18%);
+      }
+
+      .softskies-map-option-title {
+        display: block;
+        margin-bottom: 0.24rem;
+        font-weight: 700;
+      }
+
+      .softskies-map-option-description {
+        display: block;
+        color: rgb(255 247 223 / 78%);
+        line-height: 1.25;
+      }
+
       .is-paused .softskies-ui {
         background: rgb(45 33 31 / 30%);
       }

@@ -96,8 +96,8 @@ function updateCloudMaterial(material, color, atmosphere, config) {
   const phase = atmosphere?.phase ?? 0.32;
   const warmFactor = Math.max(
     0,
-    1 - Math.min(Math.abs(phase - 0.18) / 0.16, Math.abs(phase - 0.84) / 0.16, 1),
-  ) * 0.42;
+    1 - Math.min(Math.abs(phase - 0.25) / 0.08, Math.abs(phase - 0.75) / 0.08, 1),
+  ) * 0.3;
 
   color.copy(NIGHT_CLOUD).lerp(DAY_CLOUD, dayFactor).lerp(TWILIGHT_CLOUD, warmFactor);
   material.color.copy(color);

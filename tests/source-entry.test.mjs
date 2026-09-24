@@ -26,6 +26,15 @@ test("hud exposes compact pause/play and avatar thumbnail menu hooks", async () 
   assert.match(html, /\.softskies-pause-button[\s\S]*width: 4\.25rem/);
   assert.match(hud, /textContent = paused \? "Play" : "Pause"/);
   assert.match(hud, /data-action="avatar-trigger"/);
+  assert.match(hud, /data-action="map-trigger"/);
+  assert.match(hud, /softskies-map-icon/);
+  assert.match(hud, /aria-label="Choose map"/);
+  assert.match(html, /softskies-map-card-in 0\.7s/);
+  assert.match(html, /\.softskies-map-backdrop[\s\S]*pointer-events: none/);
+  assert.match(html, /\.softskies-map-panel[\s\S]*pointer-events: auto/);
+  assert.doesNotMatch(html, /softskies-map-backdrop-fade/);
+  assert.match(hud, /softskies-map-backdrop/);
+  assert.match(hud, /onMapOpenChange\(open\)/);
   assert.match(hud, /softskies-avatar-thumb/);
   assert.doesNotMatch(hud, /<select/);
   assert.doesNotMatch(hud, /Resume/);
@@ -37,6 +46,7 @@ test("source entry imports Three.js through the project boundary and wires cloud
 
   assert.match(source, /import \* as THREE from "\.\/platform\/three\.js";/);
   assert.match(source, /import \{ createCloudLayer \} from "\.\/atmosphere\/clouds\.js";/);
+  assert.match(source, /let activeMap = getWorldMap\(DEFAULT_MAP_ID\);/);
   assert.match(source, /const cloudLayer = createCloudLayer\(scene\);/);
   assert.match(source, /cloudLayer\.update/);
   assert.match(source, /export function createSoftSkiesShell/);
@@ -69,6 +79,10 @@ test("phoenix source stays procedural and wires bounded fire and boost wind effe
   assert.match(source, /roll: intent\.roll/);
   assert.match(source, /mousePitchDelta: intent\.mousePitchDelta/);
   assert.match(source, /mouseYawDelta: intent\.mouseYawDelta/);
+  assert.match(source, /nightFactor: atmosphereState\.nightFactor/);
+  assert.match(phoenix, /subtle phoenix night visibility glow/);
+  assert.match(phoenix, /updateAvatarNightGlow/);
+  assert.match(phoenix, /emissiveIntensity/);
   assert.match(phoenix, /FIRE_PARTICLE_COUNT = 72/);
   assert.match(phoenix, /new THREE\.InstancedMesh\(geometry, material, FIRE_PARTICLE_COUNT\)/);
   assert.match(phoenix, /bounded procedural phoenix fire particle trail/);

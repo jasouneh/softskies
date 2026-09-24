@@ -2,11 +2,23 @@ const DEFAULT_AVATARS = Object.freeze([
   { id: "phoenix", label: "Phoenix", thumbnailSrc: createPhoenixThumbnailDataUri() },
 ]);
 
+const DEFAULT_MAPS = Object.freeze([
+  {
+    id: "classic-highlands",
+    label: "Classic Highlands",
+    description: "The original Soft Skies plains, rivers, villages, mountains, and snowfields.",
+  },
+]);
+
 export function createHud(root, {
   avatars = DEFAULT_AVATARS,
   selectedAvatar = "phoenix",
+  maps = DEFAULT_MAPS,
+  selectedMapId = maps[0]?.id,
   onPauseToggle = () => {},
   onAvatarChange = () => {},
+  onMapChange = () => {},
+  onMapOpenChange = () => {},
 } = {}) {
   const overlay = document.createElement("div");
   overlay.className = "softskies-ui";
@@ -17,13 +29,33 @@ export function createHud(root, {
       <button type="button" class="softskies-ui-button softskies-avatar-trigger" data-action="avatar-trigger" aria-haspopup="menu" aria-expanded="false">Avatar</button>
       <div class="softskies-avatar-menu" data-role="avatar-menu" role="menu" hidden></div>
     </div>
+    <button type="button" class="softskies-ui-button softskies-map-trigger" data-action="map-trigger" aria-haspopup="dialog" aria-expanded="false" aria-label="Choose map" title="Choose map">
+      <svg class="softskies-map-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <path d="M9 18l-6 3V6l6-3 6 3 6-3v15l-6 3-6-3z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+        <path d="M9 3v15M15 6v15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+      </svg>
+    </button>
+    <div class="softskies-map-backdrop" data-role="map-dialog" role="dialog" aria-modal="true" aria-labelledby="softskies-map-title" hidden>
+      <section class="softskies-map-panel">
+        <div class="softskies-map-header">
+          <h2 id="softskies-map-title" class="softskies-map-title">Choose map</h2>
+          <button type="button" class="softskies-ui-button" data-action="map-close" aria-label="Close map choices">Close</button>
+        </div>
+        <div class="softskies-map-options" data-role="map-options"></div>
+      </section>
+    </div>
   `;
   root.append(overlay);
 
   const pauseButton = overlay.querySelector('[data-action="pause"]');
   const avatarTrigger = overlay.querySelector('[data-action="avatar-trigger"]');
   const avatarMenu = overlay.querySelector('[data-role="avatar-menu"]');
+  const mapTrigger = overlay.querySelector('[data-action="map-trigger"]');
+  const mapDialog = overlay.querySelector('[data-role="map-dialog"]');
+  const mapClose = overlay.querySelector('[data-action="map-close"]');
+  const mapOptions = overlay.querySelector('[data-role="map-options"]');
   const avatarButtons = new Map();
+  const mapButtons = new Map();
 
   for (const avatar of avatars) {
     const button = document.createElement("button");
@@ -59,6 +91,24 @@ export function createHud(root, {
     : "Choose avatar";
   updateAvatarSelection(initialAvatarId);
 
+  for (const map of maps) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "softskies-map-option";
+    button.dataset.mapId = map.id;
+    button.innerHTML = `
+      <span class="softskies-map-option-title"></span>
+      <span class="softskies-map-option-description"></span>
+    `;
+    button.querySelector(".softskies-map-option-title").textContent = map.label;
+    button.querySelector(".softskies-map-option-description").textContent = map.description ?? "Explore this generated world.";
+    mapOptions.append(button);
+    mapButtons.set(map.id, button);
+  }
+  const initialMapId = maps.some((map) => map.id === selectedMapId) ? selectedMapId : maps[0]?.id;
+  mapTrigger.disabled = mapButtons.size === 0;
+  updateMapSelection(initialMapId);
+
   function show() {
     overlay.hidden = false;
     root.classList.add("has-softskies-ui");
@@ -78,11 +128,37 @@ export function createHud(root, {
     root.classList.toggle("is-avatar-menu-open", open);
   }
 
+  function toggleMapDialog(forceOpen = mapDialog.hidden) {
+    const open = Boolean(forceOpen);
+    const wasOpen = !mapDialog.hidden;
+    if (open === wasOpen) {
+      return;
+    }
+    mapDialog.hidden = !open;
+    mapTrigger.setAttribute("aria-expanded", String(open));
+    root.classList.toggle("is-map-dialog-open", open);
+    onMapOpenChange(open);
+    if (open) {
+      toggleAvatarMenu(false);
+      mapDialog.querySelector(".is-selected")?.focus?.();
+    } else {
+      mapTrigger.focus?.();
+    }
+  }
+
   function updateAvatarSelection(avatarId) {
     for (const [id, button] of avatarButtons) {
       const selected = id === avatarId;
       button.classList.toggle("is-selected", selected);
       button.setAttribute("aria-checked", String(selected));
+    }
+  }
+
+  function updateMapSelection(mapId) {
+    for (const [id, button] of mapButtons) {
+      const selected = id === mapId;
+      button.classList.toggle("is-selected", selected);
+      button.setAttribute("aria-pressed", String(selected));
     }
   }
 
@@ -111,6 +187,35 @@ export function createHud(root, {
     onAvatarChange(avatarId);
   }
 
+  function handleMapTriggerClick() {
+    show();
+    toggleMapDialog();
+  }
+
+  function handleMapCloseClick() {
+    toggleMapDialog(false);
+  }
+
+  function handleMapDialogClick(event) {
+    if (event.target === mapDialog) {
+      toggleMapDialog(false);
+      return;
+    }
+
+    const button = event.target instanceof Element
+      ? event.target.closest("[data-map-id]")
+      : null;
+    if (!button || !mapDialog.contains(button)) {
+      return;
+    }
+
+    const mapId = button.dataset.mapId;
+    show();
+    updateMapSelection(mapId);
+    onMapChange(mapId);
+    toggleMapDialog(false);
+  }
+
   function handleDocumentClick(event) {
     if (event.target instanceof Node && !overlay.contains(event.target)) {
       toggleAvatarMenu(false);
@@ -120,18 +225,23 @@ export function createHud(root, {
   function handleDocumentKeyDown(event) {
     if (event.key === "Escape") {
       toggleAvatarMenu(false);
+      toggleMapDialog(false);
     }
   }
 
   pauseButton.addEventListener("click", handlePauseClick);
   avatarTrigger.addEventListener("click", handleAvatarTriggerClick);
   avatarMenu.addEventListener("click", handleAvatarMenuClick);
+  mapTrigger.addEventListener("click", handleMapTriggerClick);
+  mapClose.addEventListener("click", handleMapCloseClick);
+  mapDialog.addEventListener("click", handleMapDialogClick);
   document.addEventListener("click", handleDocumentClick);
   document.addEventListener("keydown", handleDocumentKeyDown);
 
   return {
     show,
     setPaused,
+    updateMapSelection,
     update({ pointerLocked, paused = false }) {
       setPaused(paused);
       root.classList.toggle("is-pointer-locked", pointerLocked);
@@ -140,6 +250,9 @@ export function createHud(root, {
       pauseButton.removeEventListener("click", handlePauseClick);
       avatarTrigger.removeEventListener("click", handleAvatarTriggerClick);
       avatarMenu.removeEventListener("click", handleAvatarMenuClick);
+      mapTrigger.removeEventListener("click", handleMapTriggerClick);
+      mapClose.removeEventListener("click", handleMapCloseClick);
+      mapDialog.removeEventListener("click", handleMapDialogClick);
       document.removeEventListener("click", handleDocumentClick);
       document.removeEventListener("keydown", handleDocumentKeyDown);
       overlay.remove();

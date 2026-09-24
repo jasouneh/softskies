@@ -104,6 +104,11 @@ export function createPhoenixView() {
   const fireTrail = createFireTrail(materials.fire);
   group.add(fireTrail.mesh);
 
+  const avatarGlow = new THREE.PointLight(0xffb86b, 0, 9, 2);
+  avatarGlow.name = "subtle phoenix night visibility glow";
+  avatarGlow.position.set(0, 0.28, -0.25);
+  group.add(avatarGlow);
+
   group.scale.setScalar(1.18);
 
   let windIntensity = 0;
@@ -165,6 +170,7 @@ export function createPhoenixView() {
       materials.wind.opacity = 0.48 * windIntensity;
       updateWingtipWind(leftWing.wind, windIntensity, elapsed);
       updateWingtipWind(rightWing.wind, windIntensity, elapsed);
+      updateAvatarNightGlow(materials, avatarGlow, effects.nightFactor ?? 0, dt);
     },
     dispose() {
       disposeObjectResources(group);
@@ -249,8 +255,9 @@ function updateWingFeatherMotion(wing, side, motion) {
 }
 
 function createPhoenixMaterials() {
-  const flat = { roughness: 0.72, flatShading: true };
-  const wing = { roughness: 0.7, flatShading: true, side: THREE.DoubleSide };
+  const glowBase = { emissive: 0xff8a2a, emissiveIntensity: 0 };
+  const flat = { roughness: 0.72, flatShading: true, ...glowBase };
+  const wing = { roughness: 0.7, flatShading: true, side: THREE.DoubleSide, ...glowBase };
 
   return {
     body: new THREE.MeshStandardMaterial({ color: PALETTE.body, ...flat }),
@@ -265,7 +272,7 @@ function createPhoenixMaterials() {
     copper: new THREE.MeshStandardMaterial({ color: PALETTE.copper, ...wing }),
     plum: new THREE.MeshStandardMaterial({ color: PALETTE.plum, ...wing }),
     sunlit: new THREE.MeshStandardMaterial({ color: PALETTE.sunlit, ...wing }),
-    beak: new THREE.MeshStandardMaterial({ color: PALETTE.beak, roughness: 0.62, flatShading: true }),
+    beak: new THREE.MeshStandardMaterial({ color: PALETTE.beak, roughness: 0.62, flatShading: true, ...glowBase }),
     eye: new THREE.MeshBasicMaterial({ color: PALETTE.eye }),
     fire: new THREE.MeshBasicMaterial({
       name: "procedural phoenix fire particle material",
@@ -285,6 +292,20 @@ function createPhoenixMaterials() {
       blending: THREE.AdditiveBlending,
     }),
   };
+}
+
+function updateAvatarNightGlow(materials, glowLight, nightFactor, dt) {
+  const glow = clamp(nightFactor, 0, 1);
+  const blend = 1 - Math.exp(-dt * 3.2);
+  const targetLight = glow * 0.42;
+  glowLight.intensity += (targetLight - glowLight.intensity) * blend;
+
+  const targetEmissive = glow * 0.055;
+  for (const material of Object.values(materials)) {
+    if (material.emissive && typeof material.emissiveIntensity === "number") {
+      material.emissiveIntensity += (targetEmissive - material.emissiveIntensity) * blend;
+    }
+  }
 }
 
 function createBodyFlameFacets(materials) {

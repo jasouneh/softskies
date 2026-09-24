@@ -11,6 +11,15 @@ const MATERIAL_COLORS = {
   [MATERIAL_IDS.sand]: new THREE.Color(0xb9bc78),
 };
 
+const BIOME_COLORS = {
+  jungle: new THREE.Color(0x3fbf5c),
+  rainforest: new THREE.Color(0x1f8f57),
+  desert: new THREE.Color(0xd3ad5d),
+  "desert-rock": new THREE.Color(0xaa8760),
+  "red-sand": new THREE.Color(0xc4694a),
+  oasis: new THREE.Color(0x70b96a),
+};
+
 export function createTerrainMaterialPalette() {
   const material = new THREE.MeshStandardMaterial({
     name: "terrain-low-poly-vertex-colors",
@@ -32,9 +41,10 @@ export function createTerrainChunkObject(chunk, { materials = createTerrainMater
       const ne = getChunkSample(chunk, ix + 1, iz);
       const sw = getChunkSample(chunk, ix, iz + 1);
       const se = getChunkSample(chunk, ix + 1, iz + 1);
-      const materialIndex = resolveCellMaterial(nw, ne, sw, se);
+      const samples = [nw, ne, sw, se];
+      const materialIndex = resolveCellMaterial(...samples);
       const waterLift = materialIndex === MATERIAL_IDS.river ? 0.22 : 0;
-      const color = MATERIAL_COLORS[materialIndex] ?? MATERIAL_COLORS[MATERIAL_IDS.grass];
+      const color = resolveCellColor(samples, materialIndex);
 
       pushTriangle(positions, colors, color, nw, sw, ne, waterLift);
       pushTriangle(positions, colors, color, sw, se, ne, waterLift);
@@ -81,6 +91,41 @@ function resolveCellMaterial(...samples) {
     counts.set(sample.material, (counts.get(sample.material) ?? 0) + 1);
   }
   return [...counts.entries()].sort((a, b) => b[1] - a[1] || a[0] - b[0])[0][0];
+}
+
+function resolveCellColor(samples, materialIndex) {
+  if (materialIndex === MATERIAL_IDS.river) {
+    return MATERIAL_COLORS[MATERIAL_IDS.river];
+  }
+
+  const biome = majorityBiome(samples);
+  if (biome === "desert") {
+    if (samples.some((sample) => (sample.redSandStrength ?? 0) > 0.35)) {
+      return BIOME_COLORS["red-sand"];
+    }
+    return materialIndex === MATERIAL_IDS.rock ? BIOME_COLORS["desert-rock"] : BIOME_COLORS.desert;
+  }
+  if (biome === "rainforest") {
+    return materialIndex === MATERIAL_IDS.rock ? MATERIAL_COLORS[MATERIAL_IDS.rock] : BIOME_COLORS.rainforest;
+  }
+  if (biome === "jungle") {
+    return materialIndex === MATERIAL_IDS.rock ? MATERIAL_COLORS[MATERIAL_IDS.rock] : BIOME_COLORS.jungle;
+  }
+  if (samples.some((sample) => sample.biome && sample.waterBankStrength > 0.12)) {
+    return BIOME_COLORS.oasis;
+  }
+
+  return MATERIAL_COLORS[materialIndex] ?? MATERIAL_COLORS[MATERIAL_IDS.grass];
+}
+
+function majorityBiome(samples) {
+  const counts = new Map();
+  for (const sample of samples) {
+    if (sample.biome) {
+      counts.set(sample.biome, (counts.get(sample.biome) ?? 0) + 1);
+    }
+  }
+  return [...counts.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))[0]?.[0] ?? null;
 }
 
 function pushTriangle(positions, colors, color, a, b, c, lift = 0) {
