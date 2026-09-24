@@ -7,7 +7,8 @@ const STAR_DOME_RADIUS = 640;
 const BACKGROUND_STAR_COUNT = 360;
 const MILKY_WAY_BAND_STARS = 760;
 const MILKY_WAY_RIBBON_SEGMENTS = 96;
-const MILKY_WAY_CORE_LONGITUDE = 0.5;
+const MILKY_WAY_CORE_LONGITUDE = 0.62;
+const MILKY_WAY_CORE_LATITUDE = 0.38;
 const GALACTIC_NORMAL = new THREE.Vector3(0.568, -0.458, -0.683).normalize();
 const GALACTIC_RIGHT = new THREE.Vector3().crossVectors(new THREE.Vector3(0, 1, 0), GALACTIC_NORMAL).normalize();
 const GALACTIC_UP = new THREE.Vector3().crossVectors(GALACTIC_NORMAL, GALACTIC_RIGHT).normalize();
@@ -80,9 +81,11 @@ function createStarField(seed) {
   for (let index = 0; index < MILKY_WAY_BAND_STARS; index += 1) {
     const coreBias = randomAt(seedHash, 0x9a1a, index) < 0.32;
     const longitude = coreBias
-      ? MILKY_WAY_CORE_LONGITUDE + gaussianAt(seedHash, 0xb4c0, index) * 0.34
+      ? MILKY_WAY_CORE_LONGITUDE + gaussianAt(seedHash, 0xb4c0, index) * 0.22
       : randomAt(seedHash, 0xc0de, index) * TAU - Math.PI;
-    const latitude = gaussianAt(seedHash, 0xd00d, index) * (coreBias ? 0.045 : 0.105);
+    const latitude = coreBias
+      ? MILKY_WAY_CORE_LATITUDE + gaussianAt(seedHash, 0xd00d, index) * 0.052
+      : gaussianAt(seedHash, 0xd00d, index) * 0.105;
     galacticDirection(longitude, latitude, direction);
     const brightness = coreBias
       ? lerp(0.62, 1, randomAt(seedHash, 0xf10d, index))
@@ -102,6 +105,7 @@ function createStarField(seed) {
     transparent: true,
     opacity: 0,
     depthWrite: false,
+    depthTest: false,
     vertexColors: true,
     blending: THREE.AdditiveBlending,
   });
@@ -116,7 +120,7 @@ function createStarField(seed) {
 }
 
 function createMilkyWayCoreGlow() {
-  const direction = galacticDirection(MILKY_WAY_CORE_LONGITUDE, 0.018, new THREE.Vector3());
+  const direction = galacticDirection(MILKY_WAY_CORE_LONGITUDE, MILKY_WAY_CORE_LATITUDE, new THREE.Vector3());
   const geometry = new THREE.CircleGeometry(1, 32);
   geometry.name = "forward procedural Milky Way core glow";
 
@@ -126,6 +130,7 @@ function createMilkyWayCoreGlow() {
     transparent: true,
     opacity: 0,
     depthWrite: false,
+    depthTest: false,
     side: THREE.DoubleSide,
     blending: THREE.AdditiveBlending,
   });
@@ -171,6 +176,7 @@ function createMilkyWayRibbon({ name, width, radius, color }) {
     transparent: true,
     opacity: 0,
     depthWrite: false,
+    depthTest: false,
     side: THREE.DoubleSide,
     blending: THREE.AdditiveBlending,
   });

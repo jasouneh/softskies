@@ -26,6 +26,9 @@ test("hud exposes compact pause/play and avatar thumbnail menu hooks", async () 
   assert.match(html, /\.softskies-pause-button[\s\S]*width: 4\.25rem/);
   assert.match(hud, /textContent = paused \? "Play" : "Pause"/);
   assert.match(hud, /data-action="avatar-trigger"/);
+  assert.match(hud, /data-action="map-trigger"/);
+  assert.match(hud, /softskies-map-backdrop/);
+  assert.match(hud, /onMapOpenChange\(open\)/);
   assert.match(hud, /softskies-avatar-thumb/);
   assert.doesNotMatch(hud, /<select/);
   assert.doesNotMatch(hud, /Resume/);
@@ -37,6 +40,7 @@ test("source entry imports Three.js through the project boundary and wires cloud
 
   assert.match(source, /import \* as THREE from "\.\/platform\/three\.js";/);
   assert.match(source, /import \{ createCloudLayer \} from "\.\/atmosphere\/clouds\.js";/);
+  assert.match(source, /let activeMap = getWorldMap\(DEFAULT_MAP_ID\);/);
   assert.match(source, /const cloudLayer = createCloudLayer\(scene\);/);
   assert.match(source, /cloudLayer\.update/);
   assert.match(source, /export function createSoftSkiesShell/);

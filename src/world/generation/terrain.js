@@ -1,12 +1,17 @@
 import { MATERIAL_IDS, MATERIAL_NAMES, WORLD_CONFIG, WORLD_SEED } from "../../config/game.js";
 import { sampleBaseTerrain } from "./base-terrain.js";
 import { sampleLake, listChunkLakeInfluences } from "./lakes.js";
-import { normalizeSeed, smoothstep } from "./noise.js";
+import { clamp, hash2, normalizeSeed, smoothstep } from "./noise.js";
 import { listChunkRiverInfluences, sampleRiver } from "./rivers.js";
 
-export function sampleTerrain(seed = WORLD_SEED, worldX = 0, worldZ = 0) {
+export function sampleTerrain(seed = WORLD_SEED, worldX = 0, worldZ = 0, options = {}) {
+  const mapOptions = resolveTerrainOptions(seed, options);
   const seedHash = normalizeSeed(seed);
-  const base = sampleBaseTerrain(seedHash, worldX, worldZ);
+  const base = sampleBaseTerrain(seedHash, worldX, worldZ, mapOptions);
+  if (mapOptions.profile === "sunspice-wilds") {
+    return sampleSunspiceTerrain(seedHash, base, worldX, worldZ);
+  }
+
   const { plains, mountain: massif, slopeProxy } = base;
   const rawRiver = sampleRiver(seedHash, worldX, worldZ);
   const rawLake = sampleLake(seedHash, worldX, worldZ);
@@ -62,7 +67,10 @@ export function sampleTerrain(seed = WORLD_SEED, worldX = 0, worldZ = 0) {
 export function generateTerrainChunk(seed = WORLD_SEED, chunkX = 0, chunkZ = 0, {
   chunkSize = WORLD_CONFIG.chunkSize,
   segments = WORLD_CONFIG.chunkSegments,
+  map,
+  profile,
 } = {}) {
+  const terrainOptions = resolveTerrainOptions(seed, { map, profile });
   const step = chunkSize / segments;
   const samples = [];
   const materialCounts = Object.fromEntries(MATERIAL_NAMES.map((name) => [name, 0]));
@@ -74,7 +82,7 @@ export function generateTerrainChunk(seed = WORLD_SEED, chunkX = 0, chunkZ = 0, 
     for (let ix = 0; ix <= segments; ix += 1) {
       const worldX = chunkX * chunkSize + ix * step;
       const worldZ = chunkZ * chunkSize + iz * step;
-      const sample = sampleTerrain(seed, worldX, worldZ);
+      const sample = sampleTerrain(seed, worldX, worldZ, terrainOptions);
       samples.push({ worldX, worldZ, ...sample });
       minHeight = Math.min(minHeight, sample.height);
       maxHeight = Math.max(maxHeight, sample.height);
@@ -94,8 +102,8 @@ export function generateTerrainChunk(seed = WORLD_SEED, chunkX = 0, chunkZ = 0, 
     segments,
     step,
     samples,
-    rivers: listChunkRiverInfluences(seed, chunkX, chunkZ, { chunkSize }),
-    lakes: listChunkLakeInfluences(seed, chunkX, chunkZ, { chunkSize }),
+    rivers: terrainOptions.profile === "sunspice-wilds" ? [] : listChunkRiverInfluences(seed, chunkX, chunkZ, { chunkSize }),
+    lakes: terrainOptions.profile === "sunspice-wilds" ? [] : listChunkLakeInfluences(seed, chunkX, chunkZ, { chunkSize }),
     stats: {
       minHeight,
       maxHeight,
@@ -126,6 +134,103 @@ export function getChunkBorderHeights(chunk, side) {
     values.push(getChunkSample(chunk, ix, iz).height);
   }
   return values;
+}
+
+function resolveTerrainOptions(seed, { map, profile } = {}) {
+  return {
+    profile: profile ?? map?.terrainProfile ?? (String(seed).includes("sunspice-wilds") ? "sunspice-wilds" : "highlands"),
+    map,
+  };
+}
+
+function sampleSunspiceTerrain(seedHash, base, worldX, worldZ) {
+  const { plains, mountain: massif, slopeProxy, biome } = base;
+  const oasis = sampleOasis(seedHash, worldX, worldZ, base);
+  const waterStrength = oasis.strength;
+  const bankStrength = oasis.bankStrength;
+  const height = base.height - oasis.strength * 2.8;
+  const material = chooseSunspiceMaterial({ height, biome, waterStrength, bankStrength, slopeProxy, massif });
+
+  return {
+    height,
+    material,
+    materialName: MATERIAL_NAMES[material],
+    biome,
+    biomeName: biome,
+    riverStrength: 0,
+    riverDistance: Infinity,
+    riverWidth: 0,
+    riverBankStrength: 0,
+    lakeStrength: oasis.strength,
+    lakeDistance: oasis.distance,
+    lakeRadius: oasis.radius,
+    lakeBankStrength: oasis.bankStrength,
+    waterStrength,
+    waterBankStrength: bankStrength,
+    mountain: massif,
+    slope: slopeProxy,
+    plains,
+    desert: base.desert,
+    rainforest: base.rainforest,
+    jungle: base.jungle,
+  };
+}
+
+function sampleOasis(seedHash, worldX, worldZ, base) {
+  if (base.biome !== "desert") {
+    return { strength: 0, bankStrength: 0, distance: Infinity, radius: 0 };
+  }
+
+  const cellSize = 640;
+  const cellX = Math.floor(worldX / cellSize);
+  const cellZ = Math.floor(worldZ / cellSize);
+  let best = { strength: 0, bankStrength: 0, distance: Infinity, radius: 0 };
+  for (let dz = -1; dz <= 1; dz += 1) {
+    for (let dx = -1; dx <= 1; dx += 1) {
+      const x = cellX + dx;
+      const z = cellZ + dz;
+      if (hash2(seedHash ^ 0x0a51515, x, z) > 0.34) {
+        continue;
+      }
+      const centerX = (x + 0.22 + hash2(seedHash ^ 0x0a51516, x, z) * 0.56) * cellSize;
+      const centerZ = (z + 0.22 + hash2(seedHash ^ 0x0a51517, x, z) * 0.56) * cellSize;
+      const radius = 28 + hash2(seedHash ^ 0x0a51518, x, z) * 34;
+      const bankWidth = 18 + hash2(seedHash ^ 0x0a51519, x, z) * 24;
+      const distance = Math.hypot(worldX - centerX, worldZ - centerZ);
+      const strength = (1 - smoothstep(radius * 0.65, radius, distance)) * (1 - smoothstep(0.62, 0.86, base.mountain));
+      const bankStrength = (1 - smoothstep(radius, radius + bankWidth, distance)) * (1 - smoothstep(0.62, 0.86, base.mountain));
+      if (strength > best.strength || bankStrength > best.bankStrength) {
+        best = { strength: clamp(strength), bankStrength: clamp(bankStrength), distance, radius };
+      }
+    }
+  }
+  return best;
+}
+
+function chooseSunspiceMaterial({ height, biome, waterStrength, bankStrength, slopeProxy, massif }) {
+  if (waterStrength > 0.24) {
+    return MATERIAL_IDS.river;
+  }
+
+  if (biome === "desert") {
+    if (bankStrength > 0.16 || waterStrength > 0.04) {
+      return MATERIAL_IDS.meadow;
+    }
+    if ((massif > 0.58 && height > 34) || slopeProxy > 0.7) {
+      return MATERIAL_IDS.rock;
+    }
+    return MATERIAL_IDS.sand;
+  }
+
+  if (bankStrength > 0.18 || waterStrength > 0.05) {
+    return MATERIAL_IDS.meadow;
+  }
+
+  if (slopeProxy > 0.72 && height > 32) {
+    return MATERIAL_IDS.rock;
+  }
+
+  return biome === "rainforest" ? MATERIAL_IDS.meadow : MATERIAL_IDS.grass;
 }
 
 function chooseMaterial({ height, massif, waterStrength, bankStrength, slopeProxy, plains }) {

@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { WORLD_CONFIG, WORLD_SEED } from "../src/config/game.js";
+import { WORLD_CONFIG, WORLD_MAPS, WORLD_SEED } from "../src/config/game.js";
 import { generateChunkDressing } from "../src/world/generation/dressing.js";
 import { getChunkBorderHeights, generateTerrainChunk, sampleTerrain } from "../src/world/generation/terrain.js";
 import { listChunkRiverInfluences, sampleRiver } from "../src/world/generation/rivers.js";
@@ -96,6 +96,38 @@ test("visible river materials stay in lowland valleys on gentle terrain", () => 
   assert.ok(bankSamples > riverSamples, "river banks should feather rivers into the plains");
   assert.deepEqual(badRiverSamples, [], "river water should not visibly climb mountains, snow caps, or high slopes");
   assert.deepEqual(badBankSamples, [], "river banks should remain lowland and gentle too");
+});
+
+test("sunspice wilds map has jungle, rainforest, hilly desert, and themed structures", () => {
+  const wilds = WORLD_MAPS.find((map) => map.id === "sunspice-wilds");
+  const biomes = new Set();
+  const structureCounts = new Map();
+  let hillyDesertSamples = 0;
+
+  for (let chunkZ = -4; chunkZ <= 4; chunkZ += 1) {
+    for (let chunkX = -4; chunkX <= 4; chunkX += 1) {
+      const chunk = generateTerrainChunk(wilds.seed, chunkX, chunkZ, { ...WORLD_CONFIG, map: wilds });
+      for (const sample of chunk.samples) {
+        biomes.add(sample.biome);
+        if (sample.biome === "desert" && (sample.height > 28 || sample.slope > 0.45)) {
+          hillyDesertSamples += 1;
+        }
+      }
+
+      const dressing = generateChunkDressing(wilds.seed, chunkX, chunkZ, { ...WORLD_CONFIG, map: wilds });
+      for (const [type, count] of Object.entries(dressing.stats.counts)) {
+        structureCounts.set(type, (structureCounts.get(type) ?? 0) + count);
+      }
+    }
+  }
+
+  assert.ok(biomes.has("jungle"));
+  assert.ok(biomes.has("rainforest"));
+  assert.ok(biomes.has("desert"));
+  assert.ok(hillyDesertSamples > 200, "desert biomes should include substantial hilly terrain");
+  assert.ok((structureCounts.get("jungle-hut") ?? 0) > 0, "jungle should generate huts");
+  assert.ok((structureCounts.get("rainforest-shrine") ?? 0) > 0, "rainforest should generate shrines");
+  assert.ok((structureCounts.get("desert-camp") ?? 0) + (structureCounts.get("desert-ruin") ?? 0) > 0, "desert should generate camps or ruins");
 });
 
 test("chunk dressing is deterministic and bounded", () => {

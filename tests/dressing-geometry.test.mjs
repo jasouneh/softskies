@@ -19,12 +19,17 @@ test("house wall and roof triangles face outward for browser front-side renderin
   assertTrianglesFaceAway(geometry.positions, HOUSE_WALL_TRIANGLES, HOUSE_ROOF_TRIANGLES, roofCenter, "roof");
 });
 
-test("village specialty features generate low-poly geometry", () => {
+test("village and biome specialty features generate low-poly geometry", () => {
   const features = [
     { type: "blacksmith", x: 0, y: 1, z: 0, yaw: 0.2, scale: 1 },
     { type: "farm", x: 8, y: 1, z: 0, yaw: 0.4, scale: 1 },
     { type: "snow-house", x: 16, y: 1, z: 0, yaw: 0.6, scale: 1 },
     { type: "snow-farm", x: 24, y: 1, z: 0, yaw: 0.8, scale: 1 },
+    { type: "jungle-hut", x: 32, y: 1, z: 0, yaw: 1.0, scale: 1 },
+    { type: "rainforest-shrine", x: 40, y: 1, z: 0, yaw: 1.2, scale: 1 },
+    { type: "desert-camp", x: 48, y: 1, z: 0, yaw: 1.4, scale: 1 },
+    { type: "desert-ruin", x: 56, y: 1, z: 0, yaw: 1.6, scale: 1 },
+    { type: "desert-palm", x: 64, y: 1, z: 0, yaw: 1.8, scale: 1 },
   ];
   const geometry = createDressingGeometryData({ key: "village-detail-test", features });
 

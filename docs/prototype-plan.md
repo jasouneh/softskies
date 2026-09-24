@@ -10,7 +10,7 @@ Goals:
 - Three.js renderer with native browser modules during development and generated `dist/` output for Pages.
 - Procedural/generative art only for v1: phoenix, terrain, rivers, sky bodies, and early clouds are generated in code.
 - Always-flying third-person exploration with mouse-look and WASD-style input.
-- Infinite-feeling deterministic terrain with bounded streaming and disposal.
+- Infinite-feeling deterministic terrain across selectable maps with bounded streaming and disposal.
 - Architecture that can stage a simple day/night cycle, cloud layers, and later stylized stars without complex astronomy.
 
 Non-goals for the first playable slice:
@@ -43,7 +43,7 @@ Start with small browser modules under `src/`; keep module APIs narrow so they c
 - `src/atmosphere/clouds.js`: bounded low-poly generated cloud layer mesh/instances, with room to expand into a cloud sea later.
 - `src/atmosphere/stars.js`: stylized procedural star/Milky Way dome driven by a simple night factor, not full astronomy.
 - `src/ui/hud.js`: lightweight in-browser instructions and debug stats for flight tuning and streaming budgets.
-- `src/config/*.js`: tunable constants for seed, chunk size, draw radius, speed, palette, and performance budgets.
+- `src/config/*.js`: tunable constants for map definitions, seeds, chunk size, draw radius, speed, palette, and performance budgets.
 
 ## Runtime data flow
 
@@ -148,7 +148,7 @@ Keep the current structural checks and add focused tests as modules appear:
 ## Milestones
 
 1. **Foundation (landed):** source page, Three.js boundary, generated bundle, tests, Pages workflow, and this plan.
-2. **First playable slice (current):** renderer/loop modules, procedural phoenix, chase camera, pointer-lock mouse/WASD flight, bounded deterministic terrain chunks, plains/mountains/lowland rivers, procedural chunk dressing, focused generation/streaming/cloud tests, a lightweight day/night atmosphere, and the first bounded deterministic cloud layer.
+2. **First playable slice (current):** renderer/loop modules, procedural phoenix, chase camera, pointer-lock mouse/WASD flight, bounded deterministic terrain chunks, selectable Classic Highlands and Sunspice Wilds maps, plains/mountains/lowland rivers, jungles/rainforests/hilly deserts, procedural chunk dressing, focused generation/streaming/cloud tests, a lightweight day/night atmosphere, and the first bounded deterministic cloud layer.
 3. **Flight and world tuning:** tune speed/turn/camera feel, terrain scale, river/cloud readability, and draw-call/triangle budgets through browser smoke passes.
 4. **Cloud layer/cloud sea expansion:** tune/expand deterministic generated cloud cells independent of terrain chunks.
 5. **Stylized night sky (landed):** cheap procedural stars/Milky Way styling driven by the existing night factor.
