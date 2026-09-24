@@ -5,6 +5,7 @@ import { WORLD_CONFIG, WORLD_SEED } from "../src/config/game.js";
 import { generateChunkDressing } from "../src/world/generation/dressing.js";
 import { getChunkBorderHeights, generateTerrainChunk, sampleTerrain } from "../src/world/generation/terrain.js";
 import { listChunkRiverInfluences, sampleRiver } from "../src/world/generation/rivers.js";
+import { resolveWaterSurfaceHeight, WATER_SURFACE_LIFT } from "../src/world/mesh/water-surface.js";
 
 const TEST_SEED = "softskies-test-seed";
 
@@ -61,9 +62,33 @@ test("lakes are deterministic and can stand alone or meet rivers", () => {
   assert.ok(isolated.samples.some((sample) => sample.lakeStrength > 0.24 && sample.riverStrength === 0), "lakes should appear away from rivers too");
   assert.ok([...isolated.samples, ...connected.samples]
     .filter((sample) => sample.lakeStrength > 0.24)
-    .every((sample) => sample.mountain < 0.23 && sample.slope < 0.34 && sample.height < 37),
-  "lake water should stay in low, gentle basins instead of climbing hillsides");
+    .every((sample) => Number.isFinite(sample.lakeLevel) && sample.height === sample.lakeLevel),
+  "lake water samples should sit on the lake's constant water level");
   assert.deepEqual(generateTerrainChunk(WORLD_SEED, -8, -6).lakes, isolated.lakes);
+});
+
+test("mountain lakes fill their footprint with a level water surface", () => {
+  const chunk = generateTerrainChunk(WORLD_SEED, -14, -20);
+  const mountainLake = chunk.lakes.find((lake) => lake.lakeId === "-7,-10");
+
+  assert.ok(mountainLake, "fixture chunk should expose a deterministic high mountain lake");
+
+  const center = sampleTerrain(WORLD_SEED, mountainLake.centerX, mountainLake.centerZ);
+  assert.ok(center.mountain > 0.6, "fixture should be in mountain terrain");
+  assert.ok(center.lakeStrength > 0.9, "mountain lake center should render as lake water");
+  assert.equal(center.height, mountainLake.level);
+  assert.equal(center.lakeLevel, mountainLake.level);
+
+  const ringSamples = [
+    sampleTerrain(WORLD_SEED, mountainLake.centerX + mountainLake.radius * 0.5, mountainLake.centerZ),
+    sampleTerrain(WORLD_SEED, mountainLake.centerX - mountainLake.radius * 0.5, mountainLake.centerZ),
+    sampleTerrain(WORLD_SEED, mountainLake.centerX, mountainLake.centerZ + mountainLake.radius * 0.5),
+    sampleTerrain(WORLD_SEED, mountainLake.centerX, mountainLake.centerZ - mountainLake.radius * 0.5),
+  ];
+
+  assert.ok(ringSamples.every((sample) => sample.lakeStrength > 0.24));
+  assert.deepEqual(ringSamples.map((sample) => sample.height), ringSamples.map(() => mountainLake.level));
+  assert.equal(resolveWaterSurfaceHeight([center, ...ringSamples]), mountainLake.level + WATER_SURFACE_LIFT);
 });
 
 test("visible river materials stay in lowland valleys on gentle terrain", () => {
@@ -76,7 +101,7 @@ test("visible river materials stay in lowland valleys on gentle terrain", () => 
     for (let chunkX = -5; chunkX <= 5; chunkX += 1) {
       const chunk = generateTerrainChunk(WORLD_SEED, chunkX, chunkZ);
       for (const sample of chunk.samples) {
-        if (sample.materialName === "river") {
+        if (sample.riverStrength > 0.24) {
           riverSamples += 1;
           if (sample.mountain > 0.3 || sample.slope > 0.42 || sample.height > 32) {
             badRiverSamples.push(sample);
