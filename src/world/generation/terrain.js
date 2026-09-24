@@ -14,17 +14,17 @@ export function sampleTerrain(seed = WORLD_SEED, worldX = 0, worldZ = 0) {
   const gentleBankFactor = 1 - smoothstep(0.34, 0.58, slopeProxy);
   const riverStrength = rawRiver.strength * lowlandFactor * gentleBankFactor;
   const riverBankStrength = rawRiver.bankStrength * lowlandFactor * gentleBankFactor;
-  const lakeLowlandFactor = (1 - smoothstep(0.1, 0.22, massif)) * (1 - smoothstep(26, 36, base.height));
-  const lakeGentleFactor = 1 - smoothstep(0.18, 0.32, slopeProxy);
-  const lakeLevelFactor = 1 - smoothstep(5, 11, Math.abs(base.height - rawLake.level));
-  const lakeSuitability = lakeLowlandFactor * lakeGentleFactor * lakeLevelFactor;
-  const lakeStrength = rawLake.strength * lakeSuitability;
-  const lakeBankStrength = rawLake.bankStrength * lakeSuitability;
+  const lakeStrength = rawLake.strength;
+  const lakeBankStrength = rawLake.bankStrength;
   const waterStrength = Math.max(riverStrength, lakeStrength);
   const bankStrength = Math.max(riverBankStrength, lakeBankStrength);
   const riverCut = riverBankStrength * 2.2 + riverStrength * 3.4;
   const lakeCut = lakeBankStrength * 1.6 + lakeStrength * 4.8;
-  const height = base.height - Math.max(riverCut, lakeCut);
+  let height = base.height - Math.max(riverCut, lakeCut);
+  if (lakeStrength > 0.05) {
+    const lakeFloorBlend = smoothstep(0.05, 0.24, lakeStrength);
+    height = height * (1 - lakeFloorBlend) + rawLake.level * lakeFloorBlend;
+  }
 
   const river = {
     ...rawRiver,
@@ -48,11 +48,14 @@ export function sampleTerrain(seed = WORLD_SEED, worldX = 0, worldZ = 0) {
     riverDistance: river.distance,
     riverWidth: river.width,
     riverBankStrength: river.bankStrength,
+    lakeId: lake.lakeId,
     lakeStrength: lake.strength,
     lakeDistance: lake.distance,
     lakeRadius: lake.radius,
+    lakeLevel: lake.lakeId ? lake.level : null,
     lakeBankStrength: lake.bankStrength,
     waterStrength,
+    waterLevel: waterStrength > 0 ? (lake.strength >= river.strength && lake.lakeId ? lake.level : height) : null,
     waterBankStrength: bankStrength,
     mountain: massif,
     slope: slopeProxy,
