@@ -26,10 +26,23 @@ test("night phases use a genuinely dark palette instead of sunset orange", () =>
   assert.ok(duskR > nightR * 4, "warm sunset color should be limited to the dusk band");
 });
 
-test("sun height and star visibility align with the palette landmarks", () => {
+test("sun height, star visibility, and day/night duration align", () => {
   assert.ok(sampleSunCycle(0).starFactor > 0.95, "midnight should show stars");
   assert.ok(sampleSunCycle(0.5).dayFactor > 0.95, "midday should be bright");
   assert.ok(sampleSunCycle(0.24).starFactor < 0.5, "sunrise glow should not be full night");
+
+  let daySamples = 0;
+  let nightSamples = 0;
+  for (let index = 0; index < 720; index += 1) {
+    const cycle = sampleSunCycle(index / 720);
+    if (cycle.dayFactor > cycle.nightFactor) {
+      daySamples += 1;
+    } else if (cycle.nightFactor > cycle.dayFactor) {
+      nightSamples += 1;
+    }
+  }
+
+  assert.ok(Math.abs(daySamples - nightSamples) <= 1, "night should last the same normalized time as day");
 });
 
 test("night sky stays procedural, bounded, and wired into the atmosphere", async () => {
@@ -41,6 +54,9 @@ test("night sky stays procedural, bounded, and wired into the atmosphere", async
   assert.match(sky, /createNightSky\(starHook\)/);
   assert.match(stars, /MILKY_WAY_BAND_STARS = 760/);
   assert.match(stars, /createMilkyWayRibbon/);
+  assert.match(stars, /createMilkyWayCoreGlow/);
+  assert.match(stars, /MILKY_WAY_CORE_LONGITUDE = 0\.5/);
+  assert.match(stars, /coreGlow\.material\.opacity = 0\.22 \* visibility/);
   assert.match(stars, /procedural Milky Way/);
   assert.doesNotMatch(stars, /https?:\/\//);
   assert.doesNotMatch(stars, /TextureLoader|DataTextureLoader|ImageBitmapLoader/);

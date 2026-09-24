@@ -7,6 +7,7 @@ const STAR_DOME_RADIUS = 640;
 const BACKGROUND_STAR_COUNT = 360;
 const MILKY_WAY_BAND_STARS = 760;
 const MILKY_WAY_RIBBON_SEGMENTS = 96;
+const MILKY_WAY_CORE_LONGITUDE = 0.5;
 const GALACTIC_NORMAL = new THREE.Vector3(0.568, -0.458, -0.683).normalize();
 const GALACTIC_RIGHT = new THREE.Vector3().crossVectors(new THREE.Vector3(0, 1, 0), GALACTIC_NORMAL).normalize();
 const GALACTIC_UP = new THREE.Vector3().crossVectors(GALACTIC_NORMAL, GALACTIC_RIGHT).normalize();
@@ -29,17 +30,19 @@ export function createNightSky(parent, { seed = WORLD_SEED } = {}) {
     radius: STAR_DOME_RADIUS * 0.982,
     color: 0xd8e5ff,
   });
+  const coreGlow = createMilkyWayCoreGlow();
 
-  group.add(broadRibbon, coreRibbon, starField.points);
+  group.add(broadRibbon, coreRibbon, coreGlow, starField.points);
   parent.add(group);
   setVisibility(0);
 
   function setVisibility(nightFactor = 0) {
-    const visibility = smoothstep(0.72, 0.96, nightFactor);
+    const visibility = smoothstep(0.54, 0.82, nightFactor);
     group.visible = visibility > 0.01;
-    starField.material.opacity = 0.92 * visibility;
-    broadRibbon.material.opacity = 0.06 * visibility;
-    coreRibbon.material.opacity = 0.105 * visibility;
+    starField.material.opacity = 1 * visibility;
+    broadRibbon.material.opacity = 0.16 * visibility;
+    coreRibbon.material.opacity = 0.26 * visibility;
+    coreGlow.material.opacity = 0.22 * visibility;
     return visibility;
   }
 
@@ -48,6 +51,7 @@ export function createNightSky(parent, { seed = WORLD_SEED } = {}) {
     disposeMesh(starField.points);
     disposeMesh(broadRibbon);
     disposeMesh(coreRibbon);
+    disposeMesh(coreGlow);
   }
 
   return {
@@ -76,7 +80,7 @@ function createStarField(seed) {
   for (let index = 0; index < MILKY_WAY_BAND_STARS; index += 1) {
     const coreBias = randomAt(seedHash, 0x9a1a, index) < 0.32;
     const longitude = coreBias
-      ? 2.62 + gaussianAt(seedHash, 0xb4c0, index) * 0.34
+      ? MILKY_WAY_CORE_LONGITUDE + gaussianAt(seedHash, 0xb4c0, index) * 0.34
       : randomAt(seedHash, 0xc0de, index) * TAU - Math.PI;
     const latitude = gaussianAt(seedHash, 0xd00d, index) * (coreBias ? 0.045 : 0.105);
     galacticDirection(longitude, latitude, direction);
@@ -93,7 +97,7 @@ function createStarField(seed) {
 
   const material = new THREE.PointsMaterial({
     name: "procedural star glow material",
-    size: 2.1,
+    size: 2.6,
     sizeAttenuation: false,
     transparent: true,
     opacity: 0,
@@ -109,6 +113,32 @@ function createStarField(seed) {
   points.renderOrder = -20;
 
   return { points, material };
+}
+
+function createMilkyWayCoreGlow() {
+  const direction = galacticDirection(MILKY_WAY_CORE_LONGITUDE, 0.018, new THREE.Vector3());
+  const geometry = new THREE.CircleGeometry(1, 32);
+  geometry.name = "forward procedural Milky Way core glow";
+
+  const material = new THREE.MeshBasicMaterial({
+    name: "forward procedural Milky Way core glow material",
+    color: 0xcfdcff,
+    transparent: true,
+    opacity: 0,
+    depthWrite: false,
+    side: THREE.DoubleSide,
+    blending: THREE.AdditiveBlending,
+  });
+  material.fog = false;
+
+  const mesh = new THREE.Mesh(geometry, material);
+  mesh.name = "forward visible procedural Milky Way core glow";
+  mesh.position.copy(direction).multiplyScalar(STAR_DOME_RADIUS * 0.979);
+  mesh.scale.set(150, 48, 1);
+  mesh.lookAt(0, 0, 0);
+  mesh.frustumCulled = false;
+  mesh.renderOrder = -25;
+  return mesh;
 }
 
 function createMilkyWayRibbon({ name, width, radius, color }) {

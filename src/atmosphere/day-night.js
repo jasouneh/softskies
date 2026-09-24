@@ -5,12 +5,12 @@ const SUN_PHASE_OFFSET = -0.25;
 
 export const DAY_NIGHT_PALETTE = Object.freeze([
   { t: 0, sky: 0x050b18, fog: 0x071326, hemi: 0x0b1830, ground: 0x111827 },
-  { t: 0.14, sky: 0x07172f, fog: 0x102340, hemi: 0x14264a, ground: 0x171c2c },
-  { t: 0.24, sky: 0xd77458, fog: 0xd69c74, hemi: 0xd29b7e, ground: 0x37463f },
-  { t: 0.34, sky: 0x72d8ff, fog: 0xc8f3ff, hemi: 0xdff7ff, ground: 0x6ab464 },
-  { t: 0.66, sky: 0x65cfff, fog: 0xc6f0ff, hemi: 0xe4f8ff, ground: 0x70bf68 },
-  { t: 0.76, sky: 0xd86f55, fog: 0xe09a70, hemi: 0xd5997c, ground: 0x3b4748 },
-  { t: 0.86, sky: 0x07172f, fog: 0x102340, hemi: 0x14264a, ground: 0x171c2c },
+  { t: 0.2, sky: 0x07172f, fog: 0x102340, hemi: 0x14264a, ground: 0x171c2c },
+  { t: 0.25, sky: 0xd77458, fog: 0xd69c74, hemi: 0xd29b7e, ground: 0x37463f },
+  { t: 0.3, sky: 0x72d8ff, fog: 0xc8f3ff, hemi: 0xdff7ff, ground: 0x6ab464 },
+  { t: 0.7, sky: 0x65cfff, fog: 0xc6f0ff, hemi: 0xe4f8ff, ground: 0x70bf68 },
+  { t: 0.75, sky: 0xd86f55, fog: 0xe09a70, hemi: 0xd5997c, ground: 0x3b4748 },
+  { t: 0.8, sky: 0x07172f, fog: 0x102340, hemi: 0x14264a, ground: 0x171c2c },
   { t: 1, sky: 0x050b18, fog: 0x071326, hemi: 0x0b1830, ground: 0x111827 },
 ]);
 
@@ -28,9 +28,9 @@ export function sampleSunCycle(phase) {
   const angle = (wrapped + SUN_PHASE_OFFSET) * TAU;
   const sunY = Math.sin(angle);
   const sunZ = Math.cos(angle);
-  const dayFactor = smoothstep(-0.18, 0.26, sunY);
+  const dayFactor = smoothstep(-0.22, 0.22, sunY);
   const nightFactor = 1 - dayFactor;
-  const starFactor = smoothstep(0.72, 0.96, nightFactor);
+  const starFactor = smoothstep(0.62, 0.9, nightFactor);
 
   return {
     phase: wrapped,
