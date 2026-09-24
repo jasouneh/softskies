@@ -30,7 +30,9 @@ test("hud exposes compact pause/play and avatar thumbnail menu hooks", async () 
   assert.match(hud, /softskies-map-icon/);
   assert.match(hud, /aria-label="Choose map"/);
   assert.match(html, /softskies-map-card-in 0\.7s/);
-  assert.match(html, /softskies-map-backdrop-fade 0\.7s/);
+  assert.match(html, /\.softskies-map-backdrop[\s\S]*pointer-events: none/);
+  assert.match(html, /\.softskies-map-panel[\s\S]*pointer-events: auto/);
+  assert.doesNotMatch(html, /softskies-map-backdrop-fade/);
   assert.match(hud, /softskies-map-backdrop/);
   assert.match(hud, /onMapOpenChange\(open\)/);
   assert.match(hud, /softskies-avatar-thumb/);

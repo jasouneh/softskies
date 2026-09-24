@@ -158,9 +158,7 @@
         display: grid;
         place-items: center;
         padding: 1.25rem;
-        background: rgb(4 10 22 / 48%);
-        pointer-events: auto;
-        animation: softskies-map-backdrop-fade 0.7s ease both;
+        pointer-events: none;
       }
 
       .softskies-map-panel {
@@ -171,12 +169,8 @@
         background: rgb(12 24 34 / 82%);
         box-shadow: 0 1.1rem 2.6rem rgb(0 0 0 / 35%);
         backdrop-filter: blur(0.65rem);
+        pointer-events: auto;
         animation: softskies-map-card-in 0.7s cubic-bezier(0.19, 1, 0.22, 1) both;
-      }
-
-      @keyframes softskies-map-backdrop-fade {
-        from { opacity: 0; }
-        to { opacity: 1; }
       }
 
       @keyframes softskies-map-card-in {
@@ -191,7 +185,6 @@
       }
 
       @media (prefers-reduced-motion: reduce) {
-        .softskies-map-backdrop,
         .softskies-map-panel {
           animation-duration: 0.01ms;
         }
