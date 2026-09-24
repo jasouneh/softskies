@@ -138,6 +138,19 @@
         object-fit: cover;
       }
 
+      .softskies-map-trigger {
+        display: inline-grid;
+        place-items: center;
+        width: 2rem;
+        padding: 0;
+      }
+
+      .softskies-map-icon {
+        width: 1.05rem;
+        height: 1.05rem;
+        filter: drop-shadow(0 0 0.28rem rgb(255 224 141 / 18%));
+      }
+
       .softskies-map-backdrop {
         position: fixed;
         inset: 0;
@@ -147,6 +160,7 @@
         padding: 1.25rem;
         background: rgb(4 10 22 / 48%);
         pointer-events: auto;
+        animation: softskies-map-backdrop-fade 0.7s ease both;
       }
 
       .softskies-map-panel {
@@ -157,6 +171,30 @@
         background: rgb(12 24 34 / 82%);
         box-shadow: 0 1.1rem 2.6rem rgb(0 0 0 / 35%);
         backdrop-filter: blur(0.65rem);
+        animation: softskies-map-card-in 0.7s cubic-bezier(0.19, 1, 0.22, 1) both;
+      }
+
+      @keyframes softskies-map-backdrop-fade {
+        from { opacity: 0; }
+        to { opacity: 1; }
+      }
+
+      @keyframes softskies-map-card-in {
+        from {
+          opacity: 0;
+          transform: translateY(0.55rem) scale(0.985);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0) scale(1);
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .softskies-map-backdrop,
+        .softskies-map-panel {
+          animation-duration: 0.01ms;
+        }
       }
 
       .softskies-map-header {

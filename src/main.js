@@ -169,6 +169,7 @@ export function createSoftSkiesShell({ mountNode = document.body } = {}) {
           roll: intent.roll,
           mousePitchDelta: intent.mousePitchDelta,
           mouseYawDelta: intent.mouseYawDelta,
+          nightFactor: atmosphereState.nightFactor,
         });
         chaseCamera.update(dt, updatedPose, { boost: intent.boost });
         atmosphereState = atmosphere.update(playableElapsed, { camera });

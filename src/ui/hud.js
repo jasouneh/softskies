@@ -29,7 +29,12 @@ export function createHud(root, {
       <button type="button" class="softskies-ui-button softskies-avatar-trigger" data-action="avatar-trigger" aria-haspopup="menu" aria-expanded="false">Avatar</button>
       <div class="softskies-avatar-menu" data-role="avatar-menu" role="menu" hidden></div>
     </div>
-    <button type="button" class="softskies-ui-button softskies-map-trigger" data-action="map-trigger" aria-haspopup="dialog" aria-expanded="false">Map</button>
+    <button type="button" class="softskies-ui-button softskies-map-trigger" data-action="map-trigger" aria-haspopup="dialog" aria-expanded="false" aria-label="Choose map" title="Choose map">
+      <svg class="softskies-map-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <path d="M9 18l-6 3V6l6-3 6 3 6-3v15l-6 3-6-3z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+        <path d="M9 3v15M15 6v15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+      </svg>
+    </button>
     <div class="softskies-map-backdrop" data-role="map-dialog" role="dialog" aria-modal="true" aria-labelledby="softskies-map-title" hidden>
       <section class="softskies-map-panel">
         <div class="softskies-map-header">
