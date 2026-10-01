@@ -28,6 +28,26 @@ const ABOVE_GROUND_TYPES = new Set([
   "pagoda-tower",
   "village-lantern",
 ]);
+const LEVEL_PATCH_TYPES = new Set([
+  "house",
+  "blacksmith",
+  "farm",
+  "snow-house",
+  "snow-farm",
+  "igloo",
+  "jungle-hut",
+  "rainforest-shrine",
+  "desert-camp",
+  "desert-ruin",
+  "stone-pillar",
+  "china-house",
+  "china-hall",
+  "china-road",
+  "china-courtyard",
+  "mountain-temple",
+  "pagoda-tower",
+  "village-lantern",
+]);
 
 test("terrain samples are deterministic for the same seed and coordinates", () => {
   const first = sampleTerrain(TEST_SEED, 123.5, -77.25);
@@ -233,8 +253,9 @@ test("jade provinces map has stone forests, snowy temple mountains, and large vi
   assert.ok((structureCounts.get("china-courtyard") ?? 0) > 0, "large villages should include a central courtyard");
 });
 
-test("generated structures are placed fully above sampled terrain footprints", () => {
+test("generated structures are placed fully above sampled even terrain footprints", () => {
   const buried = [];
+  const uneven = [];
 
   for (const map of WORLD_MAPS) {
     for (let chunkZ = -2; chunkZ <= 2; chunkZ += 1) {
@@ -244,9 +265,12 @@ test("generated structures are placed fully above sampled terrain footprints", (
           if (!ABOVE_GROUND_TYPES.has(feature.type)) {
             continue;
           }
-          const terrainHeight = maxSampledTerrainUnderFeature(map, feature);
-          if (feature.y + 1e-6 < terrainHeight) {
-            buried.push({ type: feature.type, x: feature.x, z: feature.z, y: feature.y, terrainHeight });
+          const terrain = sampledTerrainUnderFeature(map, feature);
+          if (feature.y + 1e-6 < terrain.maxHeight) {
+            buried.push({ type: feature.type, x: feature.x, z: feature.z, y: feature.y, terrainHeight: terrain.maxHeight });
+          }
+          if (LEVEL_PATCH_TYPES.has(feature.type) && terrain.heightRange > maxAllowedFootprintHeightRange(feature) + 1e-6) {
+            uneven.push({ type: feature.type, x: feature.x, z: feature.z, heightRange: terrain.heightRange });
           }
         }
       }
@@ -254,6 +278,7 @@ test("generated structures are placed fully above sampled terrain footprints", (
   }
 
   assert.deepEqual(buried, [], "structures should sit on top of terrain instead of being embedded");
+  assert.deepEqual(uneven, [], "large-footprint stones, floors, and structure bases should use even terrain patches");
 });
 
 test("chunk dressing is deterministic and bounded", () => {
@@ -269,20 +294,50 @@ test("chunk dressing is deterministic and bounded", () => {
   assert.ok([...plains.features, ...snow.features].every((feature) => Number.isFinite(feature.x) && Number.isFinite(feature.y) && Number.isFinite(feature.z)));
 });
 
-function maxSampledTerrainUnderFeature(map, feature) {
+function sampledTerrainUnderFeature(map, feature) {
   const footprint = featureFootprint(feature);
   const yaw = feature.yaw ?? 0;
+  const xDivisions = Math.max(2, Math.min(5, Math.ceil(footprint.halfWidth / 4)));
+  const zDivisions = Math.max(2, Math.min(8, Math.ceil(footprint.halfDepth / 5)));
+  let minHeight = Infinity;
   let maxHeight = -Infinity;
-  for (const ix of [-1, 0, 1]) {
-    for (const iz of [-1, 0, 1]) {
-      const localX = footprint.halfWidth * ix;
-      const localZ = footprint.halfDepth * iz;
+
+  for (let ix = -xDivisions; ix <= xDivisions; ix += 1) {
+    for (let iz = -zDivisions; iz <= zDivisions; iz += 1) {
+      const localX = footprint.halfWidth * (ix / xDivisions);
+      const localZ = footprint.halfDepth * (iz / zDivisions);
       const offset = rotateLocal(localX, localZ, yaw);
       const terrain = sampleTerrain(map.seed, feature.x + offset.x, feature.z + offset.z, { map });
+      minHeight = Math.min(minHeight, terrain.height);
       maxHeight = Math.max(maxHeight, terrain.height);
     }
   }
-  return maxHeight;
+
+  return { minHeight, maxHeight, heightRange: maxHeight - minHeight };
+}
+
+function maxAllowedFootprintHeightRange(feature) {
+  switch (feature.type) {
+    case "china-road":
+      return 0.72;
+    case "china-courtyard":
+      return 0.62;
+    case "farm":
+    case "snow-farm":
+      return 0.52;
+    case "stone-pillar":
+      return 0.58;
+    case "village-lantern":
+      return 0.42;
+    case "mountain-temple":
+    case "china-hall":
+      return 0.8;
+    case "rainforest-shrine":
+    case "desert-ruin":
+      return 0.76;
+    default:
+      return 0.68;
+  }
 }
 
 function featureFootprint(feature) {

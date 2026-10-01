@@ -1,7 +1,7 @@
 import * as THREE from "../platform/three.js";
 import { ATMOSPHERE_CONFIG } from "../config/game.js";
 import { clamp, lerp } from "../world/generation/noise.js";
-import { advanceAtmospherePhase, sampleAtmospherePalette, sampleSunCycle } from "./day-night.js";
+import { advanceAtmospherePhase, sampleAtmospherePalette, sampleSunCycle, sampleTwilightIntensity } from "./day-night.js";
 import { createNightSky } from "./stars.js";
 
 export function createAtmosphere(scene, { config = ATMOSPHERE_CONFIG } = {}) {
@@ -47,7 +47,8 @@ export function createAtmosphere(scene, { config = ATMOSPHERE_CONFIG } = {}) {
 
   function update(elapsed, { camera } = {}) {
     const phase = advanceAtmospherePhase(elapsed, config);
-    const palette = sampleAtmospherePalette(phase);
+    const twilightIntensity = sampleTwilightIntensity(elapsed, config);
+    const palette = sampleAtmospherePalette(phase, { config, twilightIntensity });
     skyColor.setHex(palette.sky);
     fogColor.setHex(palette.fog);
     hemiSky.setHex(palette.hemi);
@@ -59,7 +60,7 @@ export function createAtmosphere(scene, { config = ATMOSPHERE_CONFIG } = {}) {
     }
     scene.fog.color.copy(fogColor);
 
-    const { angle, sunY, sunZ, dayFactor, nightFactor, starFactor } = sampleSunCycle(phase);
+    const { angle, sunY, sunZ, dayFactor, nightFactor, starFactor, dawnFactor, duskFactor, twilightFactor } = sampleSunCycle(phase, config);
     const radius = 560;
     const sunPosition = new THREE.Vector3(-Math.cos(angle * 0.37) * radius * 0.35, sunY * radius, -sunZ * radius);
     const moonPosition = sunPosition.clone().multiplyScalar(-1);
@@ -81,7 +82,7 @@ export function createAtmosphere(scene, { config = ATMOSPHERE_CONFIG } = {}) {
       moon.lookAt(camera.position);
     }
 
-    return { phase, dayFactor, nightFactor, starFactor, ...nightSkyState };
+    return { phase, dayFactor, nightFactor, starFactor, dawnFactor, duskFactor, twilightFactor, twilightIntensity, ...nightSkyState };
   }
 
   return { skyRig, sun, moon, sunLight, hemi, nightSky, update };

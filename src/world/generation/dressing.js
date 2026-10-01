@@ -121,7 +121,7 @@ function generateHighlandsChunkDressing(seed = WORLD_SEED, chunkX = 0, chunkZ = 
   if (counts["dead-tree"] + counts.igloo + counts["snow-house"] + counts["snow-farm"] === 0) {
     addFallbackFeatures(seedHash, seed, chunkX, chunkZ, chunkSize, features, counts, maxFeatures, isSnowDressingGround, "dead-tree", "igloo");
   }
-  finalizeFeaturePlacements(seed, "highlands", features);
+  finalizeFeaturePlacements(seed, "highlands", features, counts);
   features.sort((a, b) => `${a.type}:${a.x.toFixed(3)}:${a.z.toFixed(3)}`.localeCompare(`${b.type}:${b.x.toFixed(3)}:${b.z.toFixed(3)}`));
 
   return {
@@ -189,7 +189,7 @@ function generateSunspiceChunkDressing(seed, chunkX, chunkZ, {
   addBiomeCluster(seedHash, seed, chunkX, chunkZ, chunkSize, "jungle", features, counts, maxFeatures, seenBiomes);
   addBiomeCluster(seedHash, seed, chunkX, chunkZ, chunkSize, "rainforest", features, counts, maxFeatures, seenBiomes);
   addBiomeCluster(seedHash, seed, chunkX, chunkZ, chunkSize, "desert", features, counts, maxFeatures, seenBiomes);
-  finalizeFeaturePlacements(seed, "sunspice-wilds", features);
+  finalizeFeaturePlacements(seed, "sunspice-wilds", features, counts);
   features.sort((a, b) => `${a.type}:${a.x.toFixed(3)}:${a.z.toFixed(3)}`.localeCompare(`${b.type}:${b.x.toFixed(3)}:${b.z.toFixed(3)}`));
 
   return {
@@ -262,7 +262,7 @@ function generateJadeChunkDressing(seed, chunkX, chunkZ, {
   addJadeVillageCluster(seedHash, seed, chunkX, chunkZ, chunkSize, features, counts, maxFeatures, seenBiomes);
   addJadeTempleCluster(seedHash, seed, chunkX, chunkZ, chunkSize, features, counts, maxFeatures, seenBiomes);
   addStoneForestCluster(seedHash, seed, chunkX, chunkZ, chunkSize, features, counts, maxFeatures, seenBiomes);
-  finalizeFeaturePlacements(seed, "jade-provinces", features);
+  finalizeFeaturePlacements(seed, "jade-provinces", features, counts);
   features.sort((a, b) => `${a.type}:${a.x.toFixed(3)}:${a.z.toFixed(3)}`.localeCompare(`${b.type}:${b.x.toFixed(3)}:${b.z.toFixed(3)}`));
 
   return {
@@ -290,30 +290,176 @@ function createJadeFeature(seedHash, type, terrain, x, z, worldCellX, worldCellZ
   };
 }
 
-function finalizeFeaturePlacements(seed, profile, features) {
-  for (const feature of features) {
-    feature.y = Math.max(feature.y ?? -Infinity, maxTerrainHeightUnderFeature(seed, profile, feature)) + 0.04;
+function finalizeFeaturePlacements(seed, profile, features, counts) {
+  for (let index = features.length - 1; index >= 0; index -= 1) {
+    const feature = features[index];
+    const placement = findFeaturePlacement(seed, profile, feature);
+    if (!placement) {
+      features.splice(index, 1);
+      counts[feature.type] = Math.max(0, (counts[feature.type] ?? 1) - 1);
+      continue;
+    }
+    feature.x = placement.x;
+    feature.y = placement.y;
+    feature.z = placement.z;
   }
 }
 
-function maxTerrainHeightUnderFeature(seed, profile, feature) {
+function findFeaturePlacement(seed, profile, feature) {
+  if (!requiresLevelPatch(feature)) {
+    if (feature.type === "waterfall") {
+      const metrics = sampleFeatureFootprint(seed, profile, feature);
+      return { x: feature.x, y: metrics.maxHeight + 0.015, z: feature.z };
+    }
+    const terrain = sampleTerrain(seed, feature.x, feature.z, { profile });
+    return { x: feature.x, y: terrain.height + 0.015, z: feature.z };
+  }
+
+  for (const offset of candidatePlacementOffsets(feature)) {
+    const x = feature.x + offset.x;
+    const z = feature.z + offset.z;
+    const metrics = sampleFeatureFootprint(seed, profile, feature, x, z);
+    if (!isFeatureTerrainCompatible(profile, feature, metrics.centerTerrain)) {
+      continue;
+    }
+    if (metrics.heightRange <= maxFootprintHeightRange(feature)) {
+      return { x, y: metrics.maxHeight + 0.015, z };
+    }
+  }
+
+  return null;
+}
+
+function sampleFeatureFootprint(seed, profile, feature, x = feature.x, z = feature.z) {
   const footprint = featureFootprint(feature);
   const yaw = feature.yaw ?? 0;
-  const xDivisions = Math.max(2, Math.min(4, Math.ceil(footprint.halfWidth / 5)));
-  const zDivisions = Math.max(2, Math.min(6, Math.ceil(footprint.halfDepth / 6)));
+  const xDivisions = Math.max(2, Math.min(5, Math.ceil(footprint.halfWidth / 4)));
+  const zDivisions = Math.max(2, Math.min(8, Math.ceil(footprint.halfDepth / 5)));
+  let minHeight = Infinity;
   let maxHeight = -Infinity;
+  const centerTerrain = sampleTerrain(seed, x, z, { profile });
 
   for (let ix = -xDivisions; ix <= xDivisions; ix += 1) {
     for (let iz = -zDivisions; iz <= zDivisions; iz += 1) {
       const localX = footprint.halfWidth * (ix / xDivisions);
       const localZ = footprint.halfDepth * (iz / zDivisions);
       const offset = transformLocal(localX, localZ, yaw);
-      const terrain = sampleTerrain(seed, feature.x + offset.x, feature.z + offset.z, { profile });
+      const terrain = sampleTerrain(seed, x + offset.x, z + offset.z, { profile });
+      minHeight = Math.min(minHeight, terrain.height);
       maxHeight = Math.max(maxHeight, terrain.height);
     }
   }
 
-  return maxHeight;
+  return {
+    minHeight,
+    maxHeight,
+    heightRange: maxHeight - minHeight,
+    centerTerrain,
+  };
+}
+
+function candidatePlacementOffsets(feature) {
+  const footprint = featureFootprint(feature);
+  const radius = Math.min(12, Math.max(2.5, Math.min(footprint.halfWidth, footprint.halfDepth) * 0.8));
+  return [
+    { x: 0, z: 0 },
+    { x: radius, z: 0 },
+    { x: -radius, z: 0 },
+    { x: 0, z: radius },
+    { x: 0, z: -radius },
+    { x: radius * 0.7, z: radius * 0.7 },
+    { x: -radius * 0.7, z: radius * 0.7 },
+    { x: radius * 0.7, z: -radius * 0.7 },
+    { x: -radius * 0.7, z: -radius * 0.7 },
+  ];
+}
+
+function requiresLevelPatch(feature) {
+  switch (feature.type) {
+    case "house":
+    case "blacksmith":
+    case "farm":
+    case "snow-house":
+    case "snow-farm":
+    case "igloo":
+    case "jungle-hut":
+    case "rainforest-shrine":
+    case "desert-camp":
+    case "desert-ruin":
+    case "stone-pillar":
+    case "china-house":
+    case "china-hall":
+    case "china-road":
+    case "china-courtyard":
+    case "mountain-temple":
+    case "pagoda-tower":
+    case "village-lantern":
+      return true;
+    default:
+      return false;
+  }
+}
+
+function maxFootprintHeightRange(feature) {
+  switch (feature.type) {
+    case "china-road":
+      return 0.72;
+    case "china-courtyard":
+      return 0.62;
+    case "farm":
+    case "snow-farm":
+      return 0.52;
+    case "stone-pillar":
+      return 0.58;
+    case "village-lantern":
+      return 0.42;
+    case "mountain-temple":
+    case "china-hall":
+      return 0.8;
+    case "rainforest-shrine":
+    case "desert-ruin":
+      return 0.76;
+    default:
+      return 0.68;
+  }
+}
+
+function isFeatureTerrainCompatible(profile, feature, terrain) {
+  if (terrain.waterStrength > 0.18 || terrain.material === MATERIAL_IDS.river) {
+    return false;
+  }
+  if (profile === "jade-provinces") {
+    if (feature.type === "stone-pillar") {
+      return isJadeStoneGround(terrain);
+    }
+    if (feature.type === "mountain-temple") {
+      return isJadeTempleGround(terrain);
+    }
+    if (feature.type === "pagoda-tower") {
+      return isJadeTempleGround(terrain) || isJadeVillageGround(terrain);
+    }
+    if (feature.type.startsWith("china-") || feature.type === "village-lantern") {
+      return isJadeVillageGround(terrain);
+    }
+  }
+  if (profile === "sunspice-wilds") {
+    if (feature.type.startsWith("desert-") || feature.type === "cactus" || feature.type === "desert-palm") {
+      return terrain.biome === "desert" && isSunspiceDressingGround(terrain);
+    }
+    if (feature.type === "jungle-hut") {
+      return terrain.biome === "jungle" && isSunspiceDressingGround(terrain);
+    }
+    if (feature.type === "rainforest-shrine") {
+      return terrain.biome === "rainforest" && isSunspiceDressingGround(terrain);
+    }
+  }
+  if (feature.type === "snow-house" || feature.type === "snow-farm" || feature.type === "igloo") {
+    return isSnowDressingGround(terrain);
+  }
+  if (feature.type === "house" || feature.type === "blacksmith" || feature.type === "farm") {
+    return isPlainDressingGround(terrain);
+  }
+  return true;
 }
 
 function featureFootprint(feature) {
@@ -379,9 +525,13 @@ function addJadeVillageCluster(seedHash, seed, chunkX, chunkZ, chunkSize, featur
   const offsets = [
     { ox: 0, oz: 0, type: "china-courtyard", scale: 1.05, width: 18, length: 16, yawJitter: 0 },
     { ox: 0, oz: -24, type: "china-hall", scale: 1.34, yawJitter: 0.16 },
-    { ox: 0, oz: -12, type: "china-road", scale: 1, width: 3.4, length: 24, yawJitter: 0 },
-    { ox: 0, oz: 16, type: "china-road", scale: 1, width: 3.2, length: 34, yawJitter: 0 },
-    { ox: 0, oz: 0, type: "china-road", scale: 1, width: 3.2, length: 72, yawOffset: Math.PI / 2, yawJitter: 0 },
+    { ox: 0, oz: -15, type: "china-road", scale: 1, width: 3.4, length: 14, yawJitter: 0 },
+    { ox: 0, oz: 16, type: "china-road", scale: 1, width: 3.2, length: 18, yawJitter: 0 },
+    { ox: 0, oz: 34, type: "china-road", scale: 1, width: 3.2, length: 16, yawJitter: 0 },
+    { ox: -18, oz: 8, type: "china-road", scale: 1, width: 3.1, length: 24, yawOffset: Math.PI / 2, yawJitter: 0 },
+    { ox: 18, oz: 8, type: "china-road", scale: 1, width: 3.1, length: 24, yawOffset: Math.PI / 2, yawJitter: 0 },
+    { ox: -31, oz: -6, type: "china-road", scale: 1, width: 3.0, length: 18, yawOffset: Math.PI / 2, yawJitter: 0 },
+    { ox: 31, oz: -7, type: "china-road", scale: 1, width: 3.0, length: 18, yawOffset: Math.PI / 2, yawJitter: 0 },
     { ox: 28, oz: 12, type: "china-house", scale: 1.08 },
     { ox: -28, oz: 11, type: "china-house", scale: 1.1 },
     { ox: 17, oz: -31, type: "china-house", scale: 1.04 },

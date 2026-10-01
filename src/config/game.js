@@ -98,6 +98,9 @@ export const ATMOSPHERE_CONFIG = Object.freeze({
   dayLengthSeconds: 180,
   timeScale: 0.5,
   startPhase: 0.34,
+  dawnDurationSeconds: 60,
+  duskDurationSeconds: 60,
+  twilightSeed: "softskies-sunrise-sunset-v1",
 });
 
 export const CLOUD_CONFIG = Object.freeze({

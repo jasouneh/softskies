@@ -34,11 +34,11 @@ Start with small browser modules under `src/`; keep module APIs narrow so they c
 - `src/world/generation/base-terrain.js`: river-free base height fields and terrain grade helpers shared by terrain and river routing.
 - `src/world/generation/terrain.js`: deterministic height/material source of truth from seed + world coordinates.
 - `src/world/generation/rivers.js`: deterministic lowland river curves/strips derived from seed and chunk coordinates, routed through suitable valleys before terrain material projection.
-- `src/world/generation/dressing.js`: deterministic prop placement for plains trees/houses and snow dead trees/igloos.
+- `src/world/generation/dressing.js`: deterministic prop placement plus terrain-footprint validation so flat structure bases use sufficiently even ground or are skipped.
 - `src/world/mesh/terrain-mesh.js`: converts generated chunk samples into flat-shaded Three.js geometry and disposes it.
 - `src/world/mesh/dressing-geometry.js`: pure procedural prop geometry/vertex-color data for trees, houses, dead trees, and igloos; keep winding testable without WebGL.
 - `src/world/mesh/dressing-mesh.js`: wraps dressing geometry data in flat-shaded Three.js buffers and disposes it.
-- `src/atmosphere/sky.js`: simple palette interpolation, low-poly sun/moon meshes, fog color, and ambient/directional light updates.
+- `src/atmosphere/sky.js`: phase-aware palette interpolation, low-poly sun/moon meshes, fog color, twilight tinting, and ambient/directional light updates.
 - `src/atmosphere/cloud-cells.js`: deterministic large cloud-cell and puff placement, independent of terrain source data.
 - `src/atmosphere/clouds.js`: bounded low-poly generated cloud layer mesh/instances, with room to expand into a cloud sea later.
 - `src/atmosphere/stars.js`: stylized procedural star/Milky Way dome driven by a simple night factor, not full astronomy.
@@ -102,7 +102,7 @@ First playable controls:
 
 Stage atmosphere in layers:
 
-1. **Palette sky:** background/fog/light colors interpolate over a simple normalized day phase.
+1. **Palette sky:** background/fog/light colors interpolate over a normalized day phase with 60-second dawn and dusk bands and per-day pink/purple twilight intensity.
 2. **Sun/moon markers:** low-poly discs or simple meshes parented to a sky rig; no true astronomy.
 3. **Terrain material bands:** plains, mountain rock, snow caps/bands, and river colors from generated material IDs.
 4. **Cloud layer/cloud sea:** generated billboard/mesh clusters with deterministic placement by large cloud cells; keep independent from terrain chunks. The v1 layer uses bounded low-poly puff clusters and can expand toward denser cloud seas later.
@@ -148,7 +148,7 @@ Keep the current structural checks and add focused tests as modules appear:
 ## Milestones
 
 1. **Foundation (landed):** source page, Three.js boundary, generated bundle, tests, Pages workflow, and this plan.
-2. **First playable slice (current):** renderer/loop modules, procedural phoenix and Chinese-inspired dragon avatars, chase camera, pointer-lock mouse/WASD flight, bounded deterministic terrain chunks, selectable Classic Highlands, Sunspice Wilds, and Jade Provinces maps, plains/mountains/lowland rivers, jungles/rainforests/waterfalls/hilly deserts/oases/red-sand patches, stone forests/snowy temple mountains/large villages, procedural chunk dressing, focused generation/streaming/cloud tests, a lightweight day/night atmosphere, and the first bounded deterministic cloud layer.
+2. **First playable slice (current):** renderer/loop modules, procedural phoenix and Chinese-inspired dragon avatars, chase camera, pointer-lock mouse/WASD flight, bounded deterministic terrain chunks, selectable Classic Highlands, Sunspice Wilds, and Jade Provinces maps, plains/mountains/lowland rivers, jungles/rainforests/waterfalls/hilly deserts/oases/red-sand patches, stone forests/snowy temple mountains/large villages, even-ground-validated procedural chunk dressing, focused generation/streaming/cloud tests, a lightweight day/night atmosphere with fixed 60-second dawn/dusk transitions, and the first bounded deterministic cloud layer.
 3. **Flight and world tuning:** tune speed/turn/camera feel, terrain scale, river/cloud readability, and draw-call/triangle budgets through browser smoke passes.
 4. **Cloud layer/cloud sea expansion:** tune/expand deterministic generated cloud cells independent of terrain chunks.
 5. **Stylized night sky (landed):** cheap procedural stars/Milky Way styling driven by the existing night factor.
