@@ -42,7 +42,7 @@ export function createDragonView() {
   avatarGlow.position.set(0, 0.18, -0.35);
   group.add(avatarGlow);
 
-  group.scale.setScalar(1.12);
+  group.scale.setScalar(1.24);
 
   let turnResponse = 0;
   let climbResponse = 0;
@@ -61,6 +61,7 @@ export function createDragonView() {
       climbResponse += (targetClimb - climbResponse) * blend;
 
       updateDragonBody({ bodySegments, head, tail, legs, elapsed, boosting, turnResponse, climbResponse });
+      updateDragonRootMotion(dragonRoot, elapsed, boosting, turnResponse, climbResponse);
       updateDragonParticles(particles, elapsed, pose.speed, boosting);
       updateDragonNightGlow(materials, avatarGlow, effects.nightFactor ?? 0, dt);
     },
@@ -218,11 +219,11 @@ function createDragonLegs(materials) {
 }
 
 function updateDragonBody({ bodySegments, head, tail, legs, elapsed, boosting, turnResponse, climbResponse }) {
-  const speedPulse = boosting ? 1.22 : 1;
-  const phase = elapsed * (3.0 * speedPulse) + turnResponse * 0.8;
+  const speedPulse = boosting ? 1.14 : 1;
+  const phase = elapsed * (2.18 * speedPulse) + turnResponse * 0.8;
   const frontZ = -1.58;
   const spacing = 0.42;
-  const amplitude = 0.24 + Math.abs(turnResponse) * 0.18 + (boosting ? 0.06 : 0);
+  const amplitude = 0.3 + Math.abs(turnResponse) * 0.2 + (boosting ? 0.06 : 0);
   const climbLift = clamp(climbResponse, -0.6, 1) * 0.18;
 
   for (let index = 0; index < bodySegments.length; index += 1) {
@@ -246,14 +247,29 @@ function updateDragonBody({ bodySegments, head, tail, legs, elapsed, boosting, t
   tail.root.position.set(last.x, last.y, last.z + 0.34);
   tail.root.rotation.set(Math.sin(phase - BODY_SEGMENT_COUNT * 0.72) * 0.08, Math.sin(phase - 1.8) * 0.3, -turnResponse * 0.3);
   for (let index = 0; index < tail.feathers.length; index += 1) {
-    tail.feathers[index].rotation.y = Math.sin(elapsed * 4.2 + index * 0.75) * 0.1;
-    tail.feathers[index].rotation.x = 0.18 + Math.cos(elapsed * 3.5 + index) * 0.06;
+    tail.feathers[index].rotation.y = Math.sin(elapsed * 3.0 + index * 0.75) * 0.1;
+    tail.feathers[index].rotation.x = 0.18 + Math.cos(elapsed * 2.55 + index) * 0.06;
   }
 
   for (let index = 0; index < legs.legs.length; index += 1) {
-    legs.legs[index].rotation.x = Math.sin(elapsed * 3.2 + index * 1.7) * 0.12 - climbResponse * 0.08;
-    legs.legs[index].rotation.z = Math.cos(elapsed * 2.6 + index) * 0.08;
+    legs.legs[index].rotation.x = Math.sin(elapsed * 2.35 + index * 1.7) * 0.12 - climbResponse * 0.08;
+    legs.legs[index].rotation.z = Math.cos(elapsed * 2.05 + index) * 0.08;
   }
+}
+
+function updateDragonRootMotion(dragonRoot, elapsed, boosting, turnResponse, climbResponse) {
+  const glideSpeed = boosting ? 1.32 : 1;
+  const glide = elapsed * glideSpeed;
+  dragonRoot.position.set(
+    Math.sin(glide * 1.12) * 0.18 - turnResponse * 0.08,
+    Math.sin(glide * 0.72 + 0.4) * 0.045 + climbResponse * 0.03,
+    Math.cos(glide * 0.9) * 0.12,
+  );
+  dragonRoot.rotation.set(
+    climbResponse * 0.04 + Math.sin(glide * 0.78) * 0.025,
+    turnResponse * 0.14 + Math.sin(glide * 1.04) * 0.075,
+    -turnResponse * 0.1 + Math.cos(glide * 1.18) * 0.035,
+  );
 }
 
 function createDragonParticles(material) {

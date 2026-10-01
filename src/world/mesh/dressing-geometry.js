@@ -27,6 +27,8 @@ const COLORS = Object.freeze({
   templeRed: colorFromHex(0xa83e2d),
   templeGold: colorFromHex(0xf0c45a),
   templeWall: colorFromHex(0xd7bf88),
+  courtyardStone: colorFromHex(0x8f8b78),
+  roadDust: colorFromHex(0xa78b61),
   inkStone: colorFromHex(0x69757a),
   pineNeedle: colorFromHex(0x2f7660),
   lanternRed: colorFromHex(0xff6252),
@@ -78,6 +80,10 @@ export function createDressingGeometryData(dressing) {
       addChinaHouse(builder, feature);
     } else if (feature.type === "china-hall") {
       addChinaHall(builder, feature);
+    } else if (feature.type === "china-road") {
+      addChinaRoad(builder, feature);
+    } else if (feature.type === "china-courtyard") {
+      addChinaCourtyard(builder, feature);
     } else if (feature.type === "mountain-temple") {
       addMountainTemple(builder, feature);
     } else if (feature.type === "pagoda-tower") {
@@ -199,12 +205,30 @@ function addDesertRuin(builder, feature) {
 
 function addStonePillar(builder, feature) {
   const s = feature.scale;
-  addBox(builder, feature.x, feature.y + 2.0 * s, feature.z, 1.25 * s, 4.0 * s, 1.05 * s, COLORS.inkStone, feature.yaw + 0.2);
-  addBox(builder, feature.x, feature.y + 4.35 * s, feature.z, 0.92 * s, 1.55 * s, 0.82 * s, COLORS.rock, feature.yaw - 0.35);
-  addBox(builder, feature.x, feature.y + 5.35 * s, feature.z, 1.55 * s, 0.62 * s, 1.32 * s, COLORS.inkStone, feature.yaw + 0.65);
-  for (const [lx, lz, h] of [[-0.55, 0.36, 1.4], [0.48, -0.32, 1.1]]) {
-    const branch = transformLocal(lx * s, lz * s, feature.yaw);
-    addBox(builder, feature.x + branch.x, feature.y + (3.2 + h * 0.32) * s, feature.z + branch.z, 0.34 * s, h * s, 0.34 * s, COLORS.rock, feature.yaw + lx);
+  const variation = 0.5 + Math.sin(feature.x * 0.031 + feature.z * 0.047) * 0.5;
+  const mainHeight = (8.4 + variation * 5.4) * s;
+  const baseYaw = feature.yaw + variation * 0.4;
+
+  addBox(builder, feature.x, feature.y + 0.18 * s, feature.z, 4.4 * s, 0.36 * s, 3.8 * s, COLORS.rock, baseYaw);
+  addBox(builder, feature.x, feature.y + mainHeight * 0.5, feature.z, 1.12 * s, mainHeight, 1.34 * s, COLORS.inkStone, baseYaw);
+  addBox(builder, feature.x, feature.y + mainHeight + 0.22 * s, feature.z, 1.72 * s, 0.44 * s, 1.55 * s, COLORS.rock, baseYaw + 0.24);
+  addCone(builder, feature.x, feature.y + mainHeight + 0.34 * s, feature.z, 1.35 * s, 0.95 * s, 7, COLORS.pineNeedle, baseYaw);
+
+  const satelliteColumns = [
+    [-1.25, 0.88, 0.58, 0.78],
+    [1.12, -0.78, 0.5, 0.62],
+  ];
+  for (let index = 0; index < satelliteColumns.length; index += 1) {
+    const [lx, lz, width, heightFactor] = satelliteColumns[index];
+    const offset = transformLocal(lx * s, lz * s, baseYaw);
+    const height = mainHeight * heightFactor;
+    const x = feature.x + offset.x;
+    const z = feature.z + offset.z;
+    addBox(builder, x, feature.y + height * 0.5, z, width * s, height, (width * 1.18) * s, COLORS.inkStone, baseYaw + index * 0.52);
+    addBox(builder, x, feature.y + height + 0.15 * s, z, (width * 1.65) * s, 0.3 * s, (width * 1.45) * s, COLORS.rock, baseYaw + index * 0.52);
+    if (index === 0) {
+      addCone(builder, x, feature.y + height + 0.25 * s, z, 0.82 * s, 0.64 * s, 7, COLORS.pineNeedle, baseYaw + 0.2);
+    }
   }
 }
 
@@ -233,6 +257,38 @@ function addChinaHall(builder, feature) {
   for (const lx of [-2.1, -0.72, 0.72, 2.1]) {
     const post = transformLocal(lx * s, -2.12 * s, feature.yaw);
     addBox(builder, feature.x + post.x, feature.y + 1.02 * s, feature.z + post.z, 0.22 * s, 1.8 * s, 0.22 * s, COLORS.templeRed, feature.yaw);
+  }
+}
+
+function addChinaRoad(builder, feature) {
+  const s = feature.scale;
+  const width = feature.width ?? 3.2 * s;
+  const length = feature.length ?? 18 * s;
+  const edgeWidth = Math.max(0.14 * s, 0.16);
+  addBox(builder, feature.x, feature.y + 0.035 * s, feature.z, width, 0.07 * s, length, COLORS.roadDust, feature.yaw);
+  for (const sign of [-1, 1]) {
+    const edge = transformLocal(sign * (width / 2 - edgeWidth / 2), 0, feature.yaw);
+    addBox(builder, feature.x + edge.x, feature.y + 0.085 * s, feature.z + edge.z, edgeWidth, 0.1 * s, length, COLORS.courtyardStone, feature.yaw);
+  }
+}
+
+function addChinaCourtyard(builder, feature) {
+  const s = feature.scale;
+  const width = feature.width ?? 18 * s;
+  const length = feature.length ?? 16 * s;
+  const border = Math.max(0.32 * s, 0.34);
+  addBox(builder, feature.x, feature.y + 0.045 * s, feature.z, width, 0.09 * s, length, COLORS.courtyardStone, feature.yaw);
+  for (const sign of [-1, 1]) {
+    const xEdge = transformLocal(sign * (width / 2 - border / 2), 0, feature.yaw);
+    addBox(builder, feature.x + xEdge.x, feature.y + 0.13 * s, feature.z + xEdge.z, border, 0.16 * s, length, COLORS.rock, feature.yaw);
+    const zEdge = transformLocal(0, sign * (length / 2 - border / 2), feature.yaw);
+    addBox(builder, feature.x + zEdge.x, feature.y + 0.13 * s, feature.z + zEdge.z, width, 0.16 * s, border, COLORS.rock, feature.yaw);
+  }
+  addBox(builder, feature.x, feature.y + 0.22 * s, feature.z, 1.2 * s, 0.34 * s, 1.2 * s, COLORS.templeGold, feature.yaw + Math.PI / 4);
+  for (const [lx, lz] of [[-0.34, 0.34], [0.34, -0.34]]) {
+    const lantern = transformLocal(lx * width, lz * length, feature.yaw);
+    addBox(builder, feature.x + lantern.x, feature.y + 0.72 * s, feature.z + lantern.z, 0.18 * s, 1.18 * s, 0.18 * s, COLORS.bark, feature.yaw);
+    addBox(builder, feature.x + lantern.x, feature.y + 1.32 * s, feature.z + lantern.z, 0.48 * s, 0.5 * s, 0.48 * s, COLORS.lanternRed, feature.yaw + Math.PI / 4);
   }
 }
 

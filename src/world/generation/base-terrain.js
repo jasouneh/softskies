@@ -1,5 +1,5 @@
 import { WORLD_SEED } from "../../config/game.js";
-import { clamp, fbm2, normalizeSeed, ridgedFbm2, smoothstep } from "./noise.js";
+import { clamp, fbm2, hash2, normalizeSeed, ridgedFbm2, smoothstep } from "./noise.js";
 
 export function sampleBaseTerrain(seed = WORLD_SEED, worldX = 0, worldZ = 0, { profile = "highlands" } = {}) {
   const seedHash = normalizeSeed(seed);
@@ -168,9 +168,10 @@ function sampleJadeBaseTerrain(seedHash, worldX, worldZ) {
   const forest = (1 - snowMask) * (1 - stoneForest * 0.55) * smoothstep(-0.2, 0.44, forestField + plains * 0.16);
   const plainsBiome = Math.max(0, 1 - Math.max(snowMask, stoneForest, forest * 0.78));
   const hillMask = smoothstep(-0.2, 0.56, plains + ridges * 0.35);
-  const stoneNeedles = Math.pow(pillarRidges, 2.1) * stoneForest;
+  const pillarField = sampleZhangjiajiePillars(seedHash, worldX, worldZ, stoneForest);
   const mountainHeight = snowMask * (34 + ridges * 66 + hillMask * 18);
-  const stoneHeight = stoneForest * (10 + ridges * 24 + stoneNeedles * 74);
+  const stoneBaseHeight = stoneForest * (5.5 + ridges * 10 + hillMask * 4.5);
+  const stoneHeight = stoneBaseHeight + pillarField.height;
   const forestHeight = forest * (5 + hillMask * 12 + ridges * 8);
   const terrace = Math.floor((smallHills * 0.5 + 0.5) * 5) / 5;
   const height = 3.2
@@ -179,11 +180,11 @@ function sampleJadeBaseTerrain(seedHash, worldX, worldZ) {
     + mountainHeight
     + stoneHeight
     + forestHeight;
-  const mountain = clamp(snowMask * 0.88 + stoneForest * (0.34 + pillarRidges * 0.44) + hillMask * 0.22);
-  const slopeProxy = clamp(ridges * (0.3 + snowMask * 0.54 + stoneForest * 0.46) + Math.abs(smallHills) * 0.36 + pillarRidges * stoneForest * 0.42);
+  const mountain = clamp(snowMask * 0.88 + stoneForest * 0.26 + pillarField.presence * 0.68 + hillMask * 0.18);
+  const slopeProxy = clamp(ridges * (0.28 + snowMask * 0.54 + stoneForest * 0.28) + Math.abs(smallHills) * 0.34 + pillarField.presence * 0.54);
   const biome = snowMask > 0.58
     ? "snowy-mountain"
-    : stoneForest > 0.56
+    : stoneForest > 0.52 || pillarField.presence > 0.14
       ? "stone-forest"
       : forest > 0.46
         ? "forest"
@@ -203,9 +204,48 @@ function sampleJadeBaseTerrain(seedHash, worldX, worldZ) {
     stoneField,
     snowMask,
     stoneForest,
+    stonePillars: pillarField.presence,
     forest,
     plainsBiome,
     biome,
+  };
+}
+
+function sampleZhangjiajiePillars(seedHash, worldX, worldZ, stoneForest) {
+  if (stoneForest < 0.08) {
+    return { height: 0, presence: 0 };
+  }
+
+  const cellSize = 92;
+  const cellX = Math.floor(worldX / cellSize);
+  const cellZ = Math.floor(worldZ / cellSize);
+  let height = 0;
+  let presence = 0;
+
+  for (let dz = -1; dz <= 1; dz += 1) {
+    for (let dx = -1; dx <= 1; dx += 1) {
+      const x = cellX + dx;
+      const z = cellZ + dz;
+      if (hash2(seedHash ^ 0x7a4a9a, x, z) > 0.68) {
+        continue;
+      }
+      const centerX = (x + 0.16 + hash2(seedHash ^ 0x7a4a9b, x, z) * 0.68) * cellSize;
+      const centerZ = (z + 0.16 + hash2(seedHash ^ 0x7a4a9c, x, z) * 0.68) * cellSize;
+      const shaftRadius = 8.5 + hash2(seedHash ^ 0x7a4a9d, x, z) * 12;
+      const baseRadius = shaftRadius * (2.15 + hash2(seedHash ^ 0x7a4a9e, x, z) * 0.9);
+      const distance = Math.hypot(worldX - centerX, worldZ - centerZ);
+      const shaft = 1 - smoothstep(shaftRadius * 0.72, shaftRadius * 1.22, distance);
+      const base = 1 - smoothstep(shaftRadius * 1.28, baseRadius, distance);
+      const pillarHeight = 52 + hash2(seedHash ^ 0x7a4a9f, x, z) * 68;
+      height = Math.max(height, Math.pow(clamp(shaft), 0.72) * pillarHeight + clamp(base) * 8.5);
+      presence = Math.max(presence, clamp(shaft) * 0.96 + clamp(base) * 0.28);
+    }
+  }
+
+  const mask = smoothstep(0.08, 0.44, stoneForest);
+  return {
+    height: height * mask,
+    presence: clamp(presence * mask),
   };
 }
 
