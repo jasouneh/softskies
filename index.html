@@ -83,10 +83,21 @@
         white-space: nowrap;
       }
 
+      .softskies-icon-button {
+        display: inline-grid;
+        place-items: center;
+        width: 2rem;
+        padding: 0;
+      }
+
+      .softskies-button-icon {
+        width: 1.05rem;
+        height: 1.05rem;
+        filter: drop-shadow(0 0 0.28rem rgb(255 224 141 / 18%));
+      }
+
       .softskies-pause-button {
-        flex: 0 0 4.25rem;
-        width: 4.25rem;
-        text-align: center;
+        flex: 0 0 2rem;
       }
 
       .softskies-avatar-picker {
@@ -94,8 +105,13 @@
         display: flex;
       }
 
-      .softskies-avatar-trigger {
-        min-width: 4.25rem;
+      .softskies-avatar-trigger-icon {
+        width: 1.24rem;
+        height: 1.24rem;
+        border-radius: 50%;
+        background: rgb(12 27 35 / 45%);
+        box-shadow: inset 0 0 0 1px rgb(255 255 255 / 16%);
+        object-fit: cover;
       }
 
       .softskies-avatar-menu {
@@ -136,13 +152,6 @@
         background: rgb(12 27 35 / 45%);
         box-shadow: inset 0 0 0 1px rgb(255 255 255 / 12%);
         object-fit: cover;
-      }
-
-      .softskies-map-trigger {
-        display: inline-grid;
-        place-items: center;
-        width: 2rem;
-        padding: 0;
       }
 
       .softskies-map-icon {

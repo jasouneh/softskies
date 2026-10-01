@@ -38,12 +38,21 @@ export function createHud(root, {
   overlay.className = "softskies-ui";
   overlay.hidden = true;
   overlay.innerHTML = `
-    <button type="button" class="softskies-ui-button softskies-pause-button" data-action="pause" aria-label="Pause game">Pause</button>
+    <button type="button" class="softskies-ui-button softskies-icon-button softskies-pause-button" data-action="pause" aria-label="Pause game" title="Pause game" aria-pressed="false">
+      <svg class="softskies-button-icon softskies-pause-icon" data-role="pause-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <path d="M8 6v12M16 6v12" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" />
+      </svg>
+      <svg class="softskies-button-icon softskies-play-icon" data-role="play-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false" hidden>
+        <path d="M9 6.8v10.4L17 12 9 6.8z" fill="currentColor" stroke="currentColor" stroke-linejoin="round" />
+      </svg>
+    </button>
     <div class="softskies-avatar-picker">
-      <button type="button" class="softskies-ui-button softskies-avatar-trigger" data-action="avatar-trigger" aria-haspopup="menu" aria-expanded="false">Avatar</button>
+      <button type="button" class="softskies-ui-button softskies-icon-button softskies-avatar-trigger" data-action="avatar-trigger" aria-haspopup="menu" aria-expanded="false" aria-label="Choose avatar" title="Choose avatar">
+        <img class="softskies-avatar-trigger-icon" data-role="avatar-trigger-icon" alt="" width="24" height="24" decoding="async" draggable="false" />
+      </button>
       <div class="softskies-avatar-menu" data-role="avatar-menu" role="menu" hidden></div>
     </div>
-    <button type="button" class="softskies-ui-button softskies-map-trigger" data-action="map-trigger" aria-haspopup="dialog" aria-expanded="false" aria-label="Choose map" title="Choose map">
+    <button type="button" class="softskies-ui-button softskies-icon-button softskies-map-trigger" data-action="map-trigger" aria-haspopup="dialog" aria-expanded="false" aria-label="Choose map" title="Choose map">
       <svg class="softskies-map-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
         <path d="M9 18l-6 3V6l6-3 6 3 6-3v15l-6 3-6-3z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
         <path d="M9 3v15M15 6v15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
@@ -65,7 +74,10 @@ export function createHud(root, {
   root.append(overlay, mapDialog);
 
   const pauseButton = overlay.querySelector('[data-action="pause"]');
+  const pauseIcon = overlay.querySelector('[data-role="pause-icon"]');
+  const playIcon = overlay.querySelector('[data-role="play-icon"]');
   const avatarTrigger = overlay.querySelector('[data-action="avatar-trigger"]');
+  const avatarTriggerIcon = overlay.querySelector('[data-role="avatar-trigger-icon"]');
   const avatarMenu = overlay.querySelector('[data-role="avatar-menu"]');
   const mapTrigger = overlay.querySelector('[data-action="map-trigger"]');
   const mapOptions = mapDialog.querySelector('[data-role="map-options"]');
@@ -101,9 +113,6 @@ export function createHud(root, {
     ? selectedAvatar
     : avatars[0]?.id;
   avatarTrigger.disabled = avatarButtons.size === 0;
-  avatarTrigger.title = avatars.length <= 1
-    ? "Phoenix is the only avatar for now; more will arrive later."
-    : "Choose avatar";
   updateAvatarSelection(initialAvatarId);
 
   for (const map of maps) {
@@ -131,8 +140,11 @@ export function createHud(root, {
   }
 
   function setPaused(paused) {
-    pauseButton.textContent = paused ? "Play" : "Pause";
+    pauseIcon.hidden = paused;
+    playIcon.hidden = !paused;
+    pauseButton.dataset.state = paused ? "play" : "pause";
     pauseButton.setAttribute("aria-label", paused ? "Play game" : "Pause game");
+    pauseButton.setAttribute("title", paused ? "Play game" : "Pause game");
     pauseButton.setAttribute("aria-pressed", String(paused));
     root.classList.toggle("is-paused", paused);
   }
@@ -163,10 +175,19 @@ export function createHud(root, {
   }
 
   function updateAvatarSelection(avatarId) {
+    const selectedAvatarOption = avatars.find((avatar) => avatar.id === avatarId) ?? avatars[0];
     for (const [id, button] of avatarButtons) {
       const selected = id === avatarId;
       button.classList.toggle("is-selected", selected);
       button.setAttribute("aria-checked", String(selected));
+    }
+    if (selectedAvatarOption) {
+      avatarTriggerIcon.src = selectedAvatarOption.thumbnailSrc ?? createAvatarThumbnailDataUri(selectedAvatarOption.thumbnailTheme ?? selectedAvatarOption.id);
+      const label = avatars.length <= 1
+        ? `${selectedAvatarOption.label} avatar`
+        : `Choose avatar, current ${selectedAvatarOption.label}`;
+      avatarTrigger.setAttribute("aria-label", label);
+      avatarTrigger.setAttribute("title", label);
     }
   }
 
