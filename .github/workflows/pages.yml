@@ -28,8 +28,8 @@ jobs:
         with:
           node-version: 22
 
-      - name: Validate source entry
-        run: node --test tests/source-entry.test.mjs
+      - name: Validate source entry and atmosphere checks
+        run: node --test tests/source-entry.test.mjs tests/atmosphere-cycle.test.mjs
 
       - name: Build GitHub Pages bundle
         run: BASE_PATH="/${{ github.event.repository.name }}/" node scripts/build.mjs

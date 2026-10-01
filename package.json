@@ -1,5 +1,5 @@
 {
-  "name": "softskies",
+  "name": "soft-skies",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -8,10 +8,10 @@
     "dev": "node scripts/serve.mjs . 5173",
     "build": "node scripts/build.mjs",
     "preview": "node scripts/serve.mjs dist 4173",
-    "test": "node --test tests/source-entry.test.mjs tests/world-generation.test.mjs tests/chunk-coordinator.test.mjs tests/dressing-geometry.test.mjs tests/cloud-cells.test.mjs",
-    "validate:source": "node --test tests/source-entry.test.mjs tests/world-generation.test.mjs tests/chunk-coordinator.test.mjs tests/dressing-geometry.test.mjs tests/cloud-cells.test.mjs",
+    "test": "node --test tests/source-entry.test.mjs tests/world-generation.test.mjs tests/chunk-coordinator.test.mjs tests/dressing-geometry.test.mjs tests/cloud-cells.test.mjs tests/atmosphere-cycle.test.mjs",
+    "validate:source": "node --test tests/source-entry.test.mjs tests/world-generation.test.mjs tests/chunk-coordinator.test.mjs tests/dressing-geometry.test.mjs tests/cloud-cells.test.mjs tests/atmosphere-cycle.test.mjs",
     "validate:bundle": "node scripts/build.mjs && node --test tests/bundle-shape.test.mjs",
-    "validate": "node --test tests/source-entry.test.mjs tests/world-generation.test.mjs tests/chunk-coordinator.test.mjs tests/dressing-geometry.test.mjs tests/cloud-cells.test.mjs && node scripts/build.mjs && node --test tests/bundle-shape.test.mjs"
+    "validate": "node --test tests/source-entry.test.mjs tests/world-generation.test.mjs tests/chunk-coordinator.test.mjs tests/dressing-geometry.test.mjs tests/cloud-cells.test.mjs tests/atmosphere-cycle.test.mjs && node scripts/build.mjs && node --test tests/bundle-shape.test.mjs"
   },
   "engines": {
     "node": ">=20"
