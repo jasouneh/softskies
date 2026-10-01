@@ -40,7 +40,9 @@ test("village and biome specialty features generate low-poly geometry", () => {
     { type: "china-courtyard", x: 128, y: 1, z: 0, yaw: 3.4, scale: 1, width: 18, length: 16 },
     { type: "mountain-temple", x: 136, y: 1, z: 0, yaw: 3.6, scale: 1 },
     { type: "pagoda-tower", x: 144, y: 1, z: 0, yaw: 3.8, scale: 1 },
-    { type: "village-lantern", x: 152, y: 1, z: 0, yaw: 4.0, scale: 1 },
+    { type: "stone-pillar-temple", x: 152, y: 1, z: 0, yaw: 4.0, scale: 1 },
+    { type: "snow-pillar-temple", x: 160, y: 1, z: 0, yaw: 4.2, scale: 1 },
+    { type: "village-lantern", x: 168, y: 1, z: 0, yaw: 4.4, scale: 1 },
   ];
   const geometry = createDressingGeometryData({ key: "village-detail-test", features });
 

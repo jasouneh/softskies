@@ -30,6 +30,8 @@ const FEATURE_TYPES = [
   "china-courtyard",
   "mountain-temple",
   "pagoda-tower",
+  "stone-pillar-temple",
+  "snow-pillar-temple",
   "village-lantern",
 ];
 
@@ -262,6 +264,7 @@ function generateJadeChunkDressing(seed, chunkX, chunkZ, {
   addJadeVillageCluster(seedHash, seed, chunkX, chunkZ, chunkSize, features, counts, maxFeatures, seenBiomes);
   addJadeTempleCluster(seedHash, seed, chunkX, chunkZ, chunkSize, features, counts, maxFeatures, seenBiomes);
   addStoneForestCluster(seedHash, seed, chunkX, chunkZ, chunkSize, features, counts, maxFeatures, seenBiomes);
+  addJadePillarTempleSites(seedHash, seed, chunkX, chunkZ, chunkSize, features, counts, maxFeatures, seenBiomes);
   finalizeFeaturePlacements(seed, "jade-provinces", features, counts);
   features.sort((a, b) => `${a.type}:${a.x.toFixed(3)}:${a.z.toFixed(3)}`.localeCompare(`${b.type}:${b.x.toFixed(3)}:${b.z.toFixed(3)}`));
 
@@ -393,6 +396,8 @@ function requiresLevelPatch(feature) {
     case "china-courtyard":
     case "mountain-temple":
     case "pagoda-tower":
+    case "stone-pillar-temple":
+    case "snow-pillar-temple":
     case "village-lantern":
       return true;
     default:
@@ -416,6 +421,9 @@ function maxFootprintHeightRange(feature) {
     case "mountain-temple":
     case "china-hall":
       return 0.8;
+    case "stone-pillar-temple":
+    case "snow-pillar-temple":
+      return 0.72;
     case "rainforest-shrine":
     case "desert-ruin":
       return 0.76;
@@ -434,6 +442,12 @@ function isFeatureTerrainCompatible(profile, feature, terrain) {
     }
     if (feature.type === "mountain-temple") {
       return isJadeTempleGround(terrain);
+    }
+    if (feature.type === "stone-pillar-temple") {
+      return isJadeStonePillarTempleGround(terrain);
+    }
+    if (feature.type === "snow-pillar-temple") {
+      return isJadeSnowPillarTempleGround(terrain);
     }
     if (feature.type === "pagoda-tower") {
       return isJadeTempleGround(terrain) || isJadeVillageGround(terrain);
@@ -495,6 +509,9 @@ function featureFootprint(feature) {
       return { halfWidth: (feature.width ?? 16 * s) / 2, halfDepth: (feature.length ?? 14 * s) / 2 };
     case "mountain-temple":
       return { halfWidth: 3.0 * s, halfDepth: 2.6 * s };
+    case "stone-pillar-temple":
+    case "snow-pillar-temple":
+      return { halfWidth: 1.75 * s, halfDepth: 1.55 * s };
     case "pagoda-tower":
       return { halfWidth: 1.95 * s, halfDepth: 1.8 * s };
     case "igloo":
@@ -557,9 +574,9 @@ function addJadeTempleCluster(seedHash, seed, chunkX, chunkZ, chunkSize, feature
   const centerZ = minZ + chunkSize * (0.2 + hash2(seedHash ^ 0x7e4f20, chunkX, chunkZ) * 0.6);
   const yaw = hash2(seedHash ^ 0x7e4f21, chunkX, chunkZ) * Math.PI * 2;
   const offsets = [
-    { ox: 0, oz: 0, type: "mountain-temple", scale: 1.04 },
-    { ox: 18, oz: 10, type: "pagoda-tower", scale: 0.78 },
-    { ox: -18, oz: 12, type: "mountain-temple", scale: 0.72 },
+    { ox: 0, oz: 0, type: "mountain-temple", scale: 1.18 },
+    { ox: 18, oz: 10, type: "pagoda-tower", scale: 0.9 },
+    { ox: -18, oz: 12, type: "mountain-temple", scale: 0.82 },
     { ox: 10, oz: -18, type: "mist-pine", scale: 0.7 },
     { ox: -12, oz: -20, type: "mist-pine", scale: 0.68 },
   ];
@@ -583,6 +600,65 @@ function addStoneForestCluster(seedHash, seed, chunkX, chunkZ, chunkSize, featur
     { ox: -18, oz: -28, type: "mist-pine", scale: 0.82 },
   ];
   addJadeClusterFeatures(seedHash, seed, centerX, centerZ, yaw, offsets, chunkX, chunkZ, chunkSize, features, counts, maxFeatures, isJadeStoneGround);
+}
+
+function addJadePillarTempleSites(seedHash, seed, chunkX, chunkZ, chunkSize, features, counts, maxFeatures, seenBiomes) {
+  if (features.length >= maxFeatures || !(seenBiomes.has("stone-forest") || seenBiomes.has("snowy-mountain"))) {
+    return;
+  }
+
+  const stoneSite = seenBiomes.has("stone-forest")
+    ? findPillarTempleSite(seedHash, seed, chunkX, chunkZ, chunkSize, "stone-pillar-temple", isJadeStonePillarTempleGround, 1.06, 0.2, 0x57e4a0)
+    : null;
+  if (stoneSite) {
+    pushFeature(features, counts, stoneSite, maxFeatures);
+  }
+
+  const snowSite = features.length < maxFeatures && seenBiomes.has("snowy-mountain")
+    ? findPillarTempleSite(seedHash, seed, chunkX, chunkZ, chunkSize, "snow-pillar-temple", isJadeSnowPillarTempleGround, 1.02, 0.18, 0x5a09e0)
+    : null;
+  if (snowSite) {
+    pushFeature(features, counts, snowSite, maxFeatures);
+  }
+}
+
+function findPillarTempleSite(seedHash, seed, chunkX, chunkZ, chunkSize, type, predicate, baseScale, scaleJitter, stream) {
+  const minX = chunkX * chunkSize;
+  const minZ = chunkZ * chunkSize;
+  const probes = 8;
+  let best = null;
+  let bestScore = -Infinity;
+
+  for (let iz = 0; iz < probes; iz += 1) {
+    for (let ix = 0; ix < probes; ix += 1) {
+      const x = minX + (ix + 0.5) * (chunkSize / probes);
+      const z = minZ + (iz + 0.5) * (chunkSize / probes);
+      const terrain = sampleTerrain(seed, x, z, { profile: "jade-provinces" });
+      if (!predicate(terrain)) {
+        continue;
+      }
+      const scale = baseScale + hash2(seedHash ^ stream, chunkX * probes + ix, chunkZ * probes + iz) * scaleJitter;
+      const feature = {
+        type,
+        x,
+        y: terrain.height,
+        z,
+        yaw: hash2(seedHash ^ (stream + 1), chunkX * probes + ix, chunkZ * probes + iz) * Math.PI * 2,
+        scale,
+      };
+      const metrics = sampleFeatureFootprint(seed, "jade-provinces", feature);
+      if (metrics.heightRange > maxFootprintHeightRange(feature) || !isFeatureTerrainCompatible("jade-provinces", feature, metrics.centerTerrain)) {
+        continue;
+      }
+      const score = terrain.height - metrics.heightRange * 22 + hash2(seedHash ^ (stream + 2), ix, iz) * 4;
+      if (score > bestScore) {
+        bestScore = score;
+        best = feature;
+      }
+    }
+  }
+
+  return best;
 }
 
 function addJadeClusterFeatures(seedHash, seed, centerX, centerZ, yaw, offsets, chunkX, chunkZ, chunkSize, features, counts, maxFeatures, predicate) {
@@ -632,6 +708,18 @@ function isJadeTempleGround(terrain) {
     && terrain.height > 48
     && terrain.waterStrength < 0.05
     && terrain.slope < 0.82;
+}
+
+function isJadeStonePillarTempleGround(terrain) {
+  return terrain.biome === "stone-forest"
+    && terrain.height > 52
+    && terrain.waterStrength < 0.05;
+}
+
+function isJadeSnowPillarTempleGround(terrain) {
+  return terrain.biome === "snowy-mountain"
+    && terrain.height > 62
+    && terrain.waterStrength < 0.05;
 }
 
 function isJadeStoneGround(terrain) {

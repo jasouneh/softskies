@@ -26,6 +26,8 @@ const ABOVE_GROUND_TYPES = new Set([
   "china-courtyard",
   "mountain-temple",
   "pagoda-tower",
+  "stone-pillar-temple",
+  "snow-pillar-temple",
   "village-lantern",
 ]);
 const LEVEL_PATCH_TYPES = new Set([
@@ -46,6 +48,8 @@ const LEVEL_PATCH_TYPES = new Set([
   "china-courtyard",
   "mountain-temple",
   "pagoda-tower",
+  "stone-pillar-temple",
+  "snow-pillar-temple",
   "village-lantern",
 ]);
 
@@ -247,6 +251,8 @@ test("jade provinces map has stone forests, snowy temple mountains, and large vi
   assert.ok((structureCounts.get("stone-pillar") ?? 0) > 0, "stone forest should generate rock-tree pillars");
   assert.ok((structureCounts.get("mountain-temple") ?? 0) > 0, "snowy mountains should generate temples");
   assert.ok((structureCounts.get("pagoda-tower") ?? 0) > 0, "Chinese-inspired map should generate pagoda towers");
+  assert.ok((structureCounts.get("stone-pillar-temple") ?? 0) > 0, "stone pillars should generate level rock temples on top");
+  assert.ok((structureCounts.get("snow-pillar-temple") ?? 0) > 0, "snowy pillars should generate level snow temples on top");
   assert.ok((structureCounts.get("china-house") ?? 0) > 100, "plains and forests should generate large villages");
   assert.ok((structureCounts.get("china-hall") ?? 0) > 0, "large villages should include central halls");
   assert.ok((structureCounts.get("china-road") ?? 0) > 0, "large villages should include connecting roads");
@@ -332,6 +338,9 @@ function maxAllowedFootprintHeightRange(feature) {
     case "mountain-temple":
     case "china-hall":
       return 0.8;
+    case "stone-pillar-temple":
+    case "snow-pillar-temple":
+      return 0.72;
     case "rainforest-shrine":
     case "desert-ruin":
       return 0.76;
@@ -373,6 +382,9 @@ function featureFootprint(feature) {
       return { halfWidth: (feature.width ?? 16 * s) / 2, halfDepth: (feature.length ?? 14 * s) / 2 };
     case "mountain-temple":
       return { halfWidth: 3.0 * s, halfDepth: 2.6 * s };
+    case "stone-pillar-temple":
+    case "snow-pillar-temple":
+      return { halfWidth: 1.75 * s, halfDepth: 1.55 * s };
     case "pagoda-tower":
       return { halfWidth: 1.95 * s, halfDepth: 1.8 * s };
     case "igloo":
