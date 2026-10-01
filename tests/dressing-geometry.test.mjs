@@ -19,12 +19,30 @@ test("house wall and roof triangles face outward for browser front-side renderin
   assertTrianglesFaceAway(geometry.positions, HOUSE_WALL_TRIANGLES, HOUSE_ROOF_TRIANGLES, roofCenter, "roof");
 });
 
-test("village specialty features generate low-poly geometry", () => {
+test("village and biome specialty features generate low-poly geometry", () => {
   const features = [
     { type: "blacksmith", x: 0, y: 1, z: 0, yaw: 0.2, scale: 1 },
     { type: "farm", x: 8, y: 1, z: 0, yaw: 0.4, scale: 1 },
     { type: "snow-house", x: 16, y: 1, z: 0, yaw: 0.6, scale: 1 },
     { type: "snow-farm", x: 24, y: 1, z: 0, yaw: 0.8, scale: 1 },
+    { type: "jungle-hut", x: 32, y: 1, z: 0, yaw: 1.0, scale: 1 },
+    { type: "rainforest-shrine", x: 40, y: 1, z: 0, yaw: 1.2, scale: 1 },
+    { type: "desert-camp", x: 48, y: 1, z: 0, yaw: 1.4, scale: 1 },
+    { type: "desert-ruin", x: 56, y: 1, z: 0, yaw: 1.6, scale: 1 },
+    { type: "desert-palm", x: 64, y: 1, z: 0, yaw: 1.8, scale: 1 },
+    { type: "cactus", x: 72, y: 1, z: 0, yaw: 2.0, scale: 1 },
+    { type: "waterfall", x: 80, y: 1, z: 0, yaw: 2.2, scale: 1 },
+    { type: "stone-pillar", x: 88, y: 1, z: 0, yaw: 2.4, scale: 1 },
+    { type: "mist-pine", x: 96, y: 1, z: 0, yaw: 2.6, scale: 1 },
+    { type: "china-house", x: 104, y: 1, z: 0, yaw: 2.8, scale: 1 },
+    { type: "china-hall", x: 112, y: 1, z: 0, yaw: 3.0, scale: 1 },
+    { type: "china-road", x: 120, y: 1, z: 0, yaw: 3.2, scale: 1, width: 3, length: 18 },
+    { type: "china-courtyard", x: 128, y: 1, z: 0, yaw: 3.4, scale: 1, width: 18, length: 16 },
+    { type: "mountain-temple", x: 136, y: 1, z: 0, yaw: 3.6, scale: 1 },
+    { type: "pagoda-tower", x: 144, y: 1, z: 0, yaw: 3.8, scale: 1 },
+    { type: "stone-pillar-temple", x: 152, y: 1, z: 0, yaw: 4.0, scale: 1 },
+    { type: "snow-pillar-temple", x: 160, y: 1, z: 0, yaw: 4.2, scale: 1 },
+    { type: "village-lantern", x: 168, y: 1, z: 0, yaw: 4.4, scale: 1 },
   ];
   const geometry = createDressingGeometryData({ key: "village-detail-test", features });
 

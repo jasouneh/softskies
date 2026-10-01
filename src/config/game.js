@@ -1,5 +1,45 @@
 export const WORLD_SEED = "softskies-v1-launch";
 
+export const WORLD_MAPS = Object.freeze([
+  {
+    id: "classic-highlands",
+    label: "Classic Highlands",
+    description: "The original Soft Skies plains, rivers, villages, mountains, and snowfields.",
+    seed: WORLD_SEED,
+    terrainProfile: "highlands",
+    thumbnailTheme: "highlands",
+  },
+  {
+    id: "sunspice-wilds",
+    label: "Sunspice Wilds",
+    description: "Jungles, rainforests, and hilly deserts with biome-themed ruins and villages.",
+    seed: "softskies-sunspice-wilds-v1",
+    terrainProfile: "sunspice-wilds",
+    thumbnailTheme: "sunspice",
+  },
+  {
+    id: "jade-provinces",
+    label: "Jade Provinces",
+    description: "Ancient Chinese-inspired stone forests, temple-topped snowy mountains, and village plains.",
+    seed: "softskies-jade-provinces-v1",
+    terrainProfile: "jade-provinces",
+    thumbnailTheme: "jade",
+  },
+]);
+
+export const AVATAR_OPTIONS = Object.freeze([
+  { id: "phoenix", label: "Phoenix", thumbnailTheme: "phoenix" },
+  { id: "dragon", label: "Dragon", thumbnailTheme: "dragon" },
+]);
+
+export const DEFAULT_AVATAR_ID = AVATAR_OPTIONS[0].id;
+
+export const DEFAULT_MAP_ID = WORLD_MAPS[0].id;
+
+export function getWorldMap(mapId = DEFAULT_MAP_ID) {
+  return WORLD_MAPS.find((map) => map.id === mapId) ?? WORLD_MAPS[0];
+}
+
 export const WORLD_CONFIG = Object.freeze({
   chunkSize: 192,
   chunkSegments: 32,
@@ -58,6 +98,9 @@ export const ATMOSPHERE_CONFIG = Object.freeze({
   dayLengthSeconds: 180,
   timeScale: 0.5,
   startPhase: 0.34,
+  dawnDurationSeconds: 60,
+  duskDurationSeconds: 60,
+  twilightSeed: "softskies-sunrise-sunset-v1",
 });
 
 export const CLOUD_CONFIG = Object.freeze({

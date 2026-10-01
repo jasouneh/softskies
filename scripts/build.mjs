@@ -16,19 +16,19 @@ const threeBoundary = await readFile(threeBoundaryUrl, "utf8");
 const threeModuleUrl = extractThreeModuleUrl(threeBoundary);
 const bundleSource = createBundleSource(sourceEntry, threeModuleUrl);
 const basePath = normalizeBasePath(process.env.BASE_PATH);
-const assetPath = pathForBase(basePath, "assets/softskies.js");
+const assetPath = pathForBase(basePath, "assets/soft-skies.js");
 const distHtml = createDistHtml(sourceHtml, basePath, assetPath);
 
 await rm(distUrl, { recursive: true, force: true });
 await mkdir(assetsUrl, { recursive: true });
 await writeFile(new URL("index.html", distUrl), distHtml, "utf8");
-await writeFile(new URL("softskies.js", assetsUrl), bundleSource, "utf8");
+await writeFile(new URL("soft-skies.js", assetsUrl), bundleSource, "utf8");
 const copiedModules = await copySourceModules(sourceRootUrl, assetsUrl, { skip: new Set(["main.js"]) });
 await writeFile(
   new URL("build-manifest.json", distUrl),
   `${JSON.stringify({
     sourceEntry: "src/main.js",
-    bundle: "assets/softskies.js",
+    bundle: "assets/soft-skies.js",
     copiedModules,
     basePath,
     externalModules: [threeModuleUrl],

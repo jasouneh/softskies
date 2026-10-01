@@ -12,6 +12,26 @@ const COLORS = Object.freeze({
   snow: colorFromHex(0xf4fbff),
   snowRoof: colorFromHex(0xd5edf7),
   iceShadow: colorFromHex(0xc6e7f5),
+  jungleLeaf: colorFromHex(0x2f9b4f),
+  rainforestLeaf: colorFromHex(0x147a4f),
+  palmLeaf: colorFromHex(0x4fae5d),
+  reedRoof: colorFromHex(0xa98746),
+  sandstone: colorFromHex(0xc59a5b),
+  sunbakedCloth: colorFromHex(0xd97244),
+  campfire: colorFromHex(0xffb347),
+  cactus: colorFromHex(0x5b9855),
+  cactusFlower: colorFromHex(0xffd37a),
+  waterfall: colorFromHex(0x67cfff),
+  waterfallFoam: colorFromHex(0xd9f7ff),
+  jadeRoof: colorFromHex(0x2e8c68),
+  templeRed: colorFromHex(0xa83e2d),
+  templeGold: colorFromHex(0xf0c45a),
+  templeWall: colorFromHex(0xd7bf88),
+  courtyardStone: colorFromHex(0x8f8b78),
+  roadDust: colorFromHex(0xa78b61),
+  inkStone: colorFromHex(0x69757a),
+  pineNeedle: colorFromHex(0x2f7660),
+  lanternRed: colorFromHex(0xff6252),
 });
 
 export function createDressingGeometryData(dressing) {
@@ -34,6 +54,46 @@ export function createDressingGeometryData(dressing) {
       addDeadTree(builder, feature);
     } else if (feature.type === "igloo") {
       addIgloo(builder, feature);
+    } else if (feature.type === "jungle-tree") {
+      addJungleTree(builder, feature);
+    } else if (feature.type === "rainforest-tree") {
+      addRainforestTree(builder, feature);
+    } else if (feature.type === "desert-palm") {
+      addDesertPalm(builder, feature);
+    } else if (feature.type === "jungle-hut") {
+      addJungleHut(builder, feature);
+    } else if (feature.type === "rainforest-shrine") {
+      addRainforestShrine(builder, feature);
+    } else if (feature.type === "desert-camp") {
+      addDesertCamp(builder, feature);
+    } else if (feature.type === "desert-ruin") {
+      addDesertRuin(builder, feature);
+    } else if (feature.type === "cactus") {
+      addCactus(builder, feature);
+    } else if (feature.type === "waterfall") {
+      addWaterfall(builder, feature);
+    } else if (feature.type === "stone-pillar") {
+      addStonePillar(builder, feature);
+    } else if (feature.type === "mist-pine") {
+      addMistPine(builder, feature);
+    } else if (feature.type === "china-house") {
+      addChinaHouse(builder, feature);
+    } else if (feature.type === "china-hall") {
+      addChinaHall(builder, feature);
+    } else if (feature.type === "china-road") {
+      addChinaRoad(builder, feature);
+    } else if (feature.type === "china-courtyard") {
+      addChinaCourtyard(builder, feature);
+    } else if (feature.type === "mountain-temple") {
+      addMountainTemple(builder, feature);
+    } else if (feature.type === "pagoda-tower") {
+      addPagodaTower(builder, feature);
+    } else if (feature.type === "stone-pillar-temple") {
+      addPillarTopTemple(builder, feature, false);
+    } else if (feature.type === "snow-pillar-temple") {
+      addPillarTopTemple(builder, feature, true);
+    } else if (feature.type === "village-lantern") {
+      addVillageLantern(builder, feature);
     }
   }
 
@@ -53,6 +113,250 @@ function addTree(builder, feature) {
   addBox(builder, feature.x, feature.y + 1.1 * s, feature.z, 0.45 * s, 2.2 * s, 0.45 * s, COLORS.bark, feature.yaw);
   addCone(builder, feature.x, feature.y + 1.5 * s, feature.z, 1.85 * s, 3.1 * s, 6, COLORS.leaf, feature.yaw);
   addCone(builder, feature.x, feature.y + 3.05 * s, feature.z, 1.25 * s, 2.0 * s, 6, COLORS.leafLight, feature.yaw + 0.4);
+}
+
+function addJungleTree(builder, feature) {
+  const s = feature.scale;
+  addBox(builder, feature.x, feature.y + 2.45 * s, feature.z, 0.58 * s, 4.9 * s, 0.58 * s, COLORS.bark, feature.yaw);
+  addCone(builder, feature.x, feature.y + 3.55 * s, feature.z, 2.65 * s, 3.0 * s, 8, COLORS.jungleLeaf, feature.yaw + 0.24);
+  addCone(builder, feature.x, feature.y + 4.85 * s, feature.z, 2.05 * s, 2.55 * s, 8, COLORS.leafLight, feature.yaw - 0.22);
+  for (let index = 0; index < 5; index += 1) {
+    const angle = feature.yaw + (index / 5) * Math.PI * 2;
+    const leaf = transformLocal(0, -1.35 * s, angle);
+    addBox(builder, feature.x + leaf.x, feature.y + 5.1 * s, feature.z + leaf.z, 0.62 * s, 0.18 * s, 3.0 * s, COLORS.jungleLeaf, angle);
+  }
+}
+
+function addRainforestTree(builder, feature) {
+  const s = feature.scale;
+  addBox(builder, feature.x, feature.y + 3.1 * s, feature.z, 0.66 * s, 6.2 * s, 0.66 * s, COLORS.bark, feature.yaw);
+  addCone(builder, feature.x, feature.y + 4.7 * s, feature.z, 3.0 * s, 3.4 * s, 9, COLORS.rainforestLeaf, feature.yaw);
+  addCone(builder, feature.x, feature.y + 6.05 * s, feature.z, 2.2 * s, 2.7 * s, 9, COLORS.jungleLeaf, feature.yaw + 0.32);
+  const vine = transformLocal(0.72 * s, 0.18 * s, feature.yaw);
+  addBox(builder, feature.x + vine.x, feature.y + 3.1 * s, feature.z + vine.z, 0.18 * s, 4.2 * s, 0.18 * s, COLORS.leaf, feature.yaw + 0.18);
+  for (let index = 0; index < 4; index += 1) {
+    const angle = feature.yaw + Math.PI / 4 + (index / 4) * Math.PI * 2;
+    const root = transformLocal(0, -0.68 * s, angle);
+    addBox(builder, feature.x + root.x, feature.y + 0.38 * s, feature.z + root.z, 0.24 * s, 0.76 * s, 1.5 * s, COLORS.bark, angle);
+  }
+}
+
+function addDesertPalm(builder, feature) {
+  const s = feature.scale;
+  addBox(builder, feature.x, feature.y + 1.65 * s, feature.z, 0.42 * s, 3.3 * s, 0.42 * s, COLORS.bark, feature.yaw + 0.18);
+  for (let index = 0; index < 6; index += 1) {
+    const angle = feature.yaw + (index / 6) * Math.PI * 2;
+    const frond = transformLocal(0, -1.18 * s, angle);
+    addBox(builder, feature.x + frond.x, feature.y + 3.28 * s, feature.z + frond.z, 0.42 * s, 0.16 * s, 2.55 * s, COLORS.palmLeaf, angle);
+  }
+}
+
+function addJungleHut(builder, feature) {
+  const s = feature.scale;
+  addBox(builder, feature.x, feature.y + 0.72 * s, feature.z, 3.2 * s, 0.26 * s, 3.0 * s, COLORS.bark, feature.yaw);
+  addBox(builder, feature.x, feature.y + 1.62 * s, feature.z, 2.8 * s, 1.8 * s, 2.6 * s, COLORS.wall, feature.yaw);
+  addGableRoof(builder, feature.x, feature.y + 2.5 * s, feature.z, 3.7 * s, 1.25 * s, 3.4 * s, COLORS.reedRoof, feature.yaw);
+  for (const [lx, lz] of [[-1.35, -1.25], [1.35, -1.25], [-1.35, 1.25], [1.35, 1.25]]) {
+    const post = transformLocal(lx * s, lz * s, feature.yaw);
+    addBox(builder, feature.x + post.x, feature.y + 0.7 * s, feature.z + post.z, 0.18 * s, 1.4 * s, 0.18 * s, COLORS.bark, feature.yaw);
+  }
+}
+
+function addRainforestShrine(builder, feature) {
+  const s = feature.scale;
+  addBox(builder, feature.x, feature.y + 0.28 * s, feature.z, 4.0 * s, 0.56 * s, 4.0 * s, COLORS.rock, feature.yaw);
+  addBox(builder, feature.x, feature.y + 0.78 * s, feature.z, 2.9 * s, 0.52 * s, 2.9 * s, COLORS.sandstone, feature.yaw);
+  addBox(builder, feature.x, feature.y + 1.26 * s, feature.z, 1.7 * s, 0.48 * s, 1.7 * s, COLORS.rock, feature.yaw);
+  addCone(builder, feature.x, feature.y + 1.44 * s, feature.z, 0.95 * s, 1.35 * s, 4, COLORS.sandstone, feature.yaw + Math.PI / 4);
+}
+
+function addDesertCamp(builder, feature) {
+  const s = feature.scale;
+  addGableRoof(builder, feature.x, feature.y + 0.14 * s, feature.z, 3.5 * s, 1.55 * s, 3.0 * s, COLORS.sunbakedCloth, feature.yaw);
+  const fire = transformLocal(0, 2.25 * s, feature.yaw);
+  addCone(builder, feature.x + fire.x, feature.y + 0.08 * s, feature.z + fire.z, 0.7 * s, 0.95 * s, 5, COLORS.campfire, feature.yaw);
+}
+
+function addCactus(builder, feature) {
+  const s = feature.scale;
+  addBox(builder, feature.x, feature.y + 1.35 * s, feature.z, 0.48 * s, 2.7 * s, 0.48 * s, COLORS.cactus, feature.yaw);
+  const armA = transformLocal(0.48 * s, 0, feature.yaw);
+  const armB = transformLocal(-0.48 * s, 0, feature.yaw);
+  addBox(builder, feature.x + armA.x, feature.y + 1.65 * s, feature.z + armA.z, 0.34 * s, 1.25 * s, 0.34 * s, COLORS.cactus, feature.yaw);
+  addBox(builder, feature.x + armA.x * 1.45, feature.y + 2.16 * s, feature.z + armA.z * 1.45, 0.86 * s, 0.28 * s, 0.32 * s, COLORS.cactus, feature.yaw);
+  addBox(builder, feature.x + armB.x, feature.y + 1.25 * s, feature.z + armB.z, 0.32 * s, 0.92 * s, 0.32 * s, COLORS.cactus, feature.yaw);
+  addBox(builder, feature.x, feature.y + 2.84 * s, feature.z, 0.28 * s, 0.16 * s, 0.28 * s, COLORS.cactusFlower, feature.yaw);
+}
+
+function addWaterfall(builder, feature) {
+  const s = feature.scale;
+  const direction = feature.yaw;
+  const drop = 4.0 * s;
+  const face = transformLocal(0, -0.18 * s, direction);
+  addBox(builder, feature.x + face.x, feature.y + 1.9 * s, feature.z + face.z, 2.2 * s, drop, 0.16 * s, COLORS.waterfall, direction);
+  addBox(builder, feature.x - face.x * 1.8, feature.y + 0.08 * s, feature.z - face.z * 1.8, 2.6 * s, 0.16 * s, 1.25 * s, COLORS.waterfallFoam, direction);
+  addBox(builder, feature.x + face.x * 1.1, feature.y + 3.95 * s, feature.z + face.z * 1.1, 2.35 * s, 0.18 * s, 0.36 * s, COLORS.waterfallFoam, direction);
+}
+
+function addDesertRuin(builder, feature) {
+  const s = feature.scale;
+  addBox(builder, feature.x, feature.y + 0.22 * s, feature.z, 4.2 * s, 0.44 * s, 3.4 * s, COLORS.sandstone, feature.yaw);
+  for (const [lx, lz, h] of [[-1.6, -1.1, 2.1], [1.5, -1.0, 1.65], [-1.4, 1.2, 1.25], [1.45, 1.05, 2.35]]) {
+    const column = transformLocal(lx * s, lz * s, feature.yaw);
+    addBox(builder, feature.x + column.x, feature.y + (0.35 + h / 2) * s, feature.z + column.z, 0.46 * s, h * s, 0.46 * s, COLORS.sandstone, feature.yaw);
+  }
+}
+
+function addStonePillar(builder, feature) {
+  const s = feature.scale;
+  const variation = 0.5 + Math.sin(feature.x * 0.031 + feature.z * 0.047) * 0.5;
+  const mainHeight = (8.4 + variation * 5.4) * s;
+  const baseYaw = feature.yaw + variation * 0.4;
+
+  addBox(builder, feature.x, feature.y + 0.18 * s, feature.z, 4.4 * s, 0.36 * s, 3.8 * s, COLORS.rock, baseYaw);
+  addBox(builder, feature.x, feature.y + mainHeight * 0.5, feature.z, 1.12 * s, mainHeight, 1.34 * s, COLORS.inkStone, baseYaw);
+  addBox(builder, feature.x, feature.y + mainHeight + 0.22 * s, feature.z, 1.72 * s, 0.44 * s, 1.55 * s, COLORS.rock, baseYaw + 0.24);
+  addCone(builder, feature.x, feature.y + mainHeight + 0.34 * s, feature.z, 1.35 * s, 0.95 * s, 7, COLORS.pineNeedle, baseYaw);
+
+  const satelliteColumns = [
+    [-1.25, 0.88, 0.58, 0.78],
+    [1.12, -0.78, 0.5, 0.62],
+  ];
+  for (let index = 0; index < satelliteColumns.length; index += 1) {
+    const [lx, lz, width, heightFactor] = satelliteColumns[index];
+    const offset = transformLocal(lx * s, lz * s, baseYaw);
+    const height = mainHeight * heightFactor;
+    const x = feature.x + offset.x;
+    const z = feature.z + offset.z;
+    addBox(builder, x, feature.y + height * 0.5, z, width * s, height, (width * 1.18) * s, COLORS.inkStone, baseYaw + index * 0.52);
+    addBox(builder, x, feature.y + height + 0.15 * s, z, (width * 1.65) * s, 0.3 * s, (width * 1.45) * s, COLORS.rock, baseYaw + index * 0.52);
+    if (index === 0) {
+      addCone(builder, x, feature.y + height + 0.25 * s, z, 0.82 * s, 0.64 * s, 7, COLORS.pineNeedle, baseYaw + 0.2);
+    }
+  }
+}
+
+function addMistPine(builder, feature) {
+  const s = feature.scale;
+  addBox(builder, feature.x, feature.y + 1.25 * s, feature.z, 0.38 * s, 2.5 * s, 0.38 * s, COLORS.bark, feature.yaw);
+  addCone(builder, feature.x, feature.y + 1.15 * s, feature.z, 1.7 * s, 2.1 * s, 7, COLORS.pineNeedle, feature.yaw + 0.16);
+  addCone(builder, feature.x, feature.y + 2.28 * s, feature.z, 1.25 * s, 1.7 * s, 7, COLORS.jadeRoof, feature.yaw - 0.22);
+  addCone(builder, feature.x, feature.y + 3.18 * s, feature.z, 0.86 * s, 1.22 * s, 7, COLORS.pineNeedle, feature.yaw + 0.4);
+}
+
+function addChinaHouse(builder, feature) {
+  const s = feature.scale;
+  addBox(builder, feature.x, feature.y + 0.82 * s, feature.z, 3.5 * s, 1.64 * s, 3.0 * s, COLORS.templeWall, feature.yaw);
+  addTieredRoof(builder, feature.x, feature.y + 1.72 * s, feature.z, 4.25 * s, 0.9 * s, 3.72 * s, feature.yaw, COLORS.jadeRoof);
+  const door = transformLocal(0, -1.55 * s, feature.yaw);
+  addBox(builder, feature.x + door.x, feature.y + 0.56 * s, feature.z + door.z, 0.64 * s, 1.12 * s, 0.16 * s, COLORS.templeRed, feature.yaw);
+}
+
+function addChinaHall(builder, feature) {
+  const s = feature.scale;
+  addBox(builder, feature.x, feature.y + 0.14 * s, feature.z, 5.8 * s, 0.28 * s, 4.5 * s, COLORS.rock, feature.yaw);
+  addBox(builder, feature.x, feature.y + 1.12 * s, feature.z, 5.0 * s, 1.9 * s, 3.8 * s, COLORS.templeWall, feature.yaw);
+  addTieredRoof(builder, feature.x, feature.y + 2.1 * s, feature.z, 6.25 * s, 1.15 * s, 4.9 * s, feature.yaw, COLORS.jadeRoof);
+  addTieredRoof(builder, feature.x, feature.y + 2.95 * s, feature.z, 4.4 * s, 0.82 * s, 3.2 * s, feature.yaw, COLORS.templeRed);
+  for (const lx of [-2.1, -0.72, 0.72, 2.1]) {
+    const post = transformLocal(lx * s, -2.12 * s, feature.yaw);
+    addBox(builder, feature.x + post.x, feature.y + 1.02 * s, feature.z + post.z, 0.22 * s, 1.8 * s, 0.22 * s, COLORS.templeRed, feature.yaw);
+  }
+}
+
+function addChinaRoad(builder, feature) {
+  const s = feature.scale;
+  const width = feature.width ?? 3.2 * s;
+  const length = feature.length ?? 18 * s;
+  const edgeWidth = Math.max(0.14 * s, 0.16);
+  addBox(builder, feature.x, feature.y + 0.035 * s, feature.z, width, 0.07 * s, length, COLORS.roadDust, feature.yaw);
+  for (const sign of [-1, 1]) {
+    const edge = transformLocal(sign * (width / 2 - edgeWidth / 2), 0, feature.yaw);
+    addBox(builder, feature.x + edge.x, feature.y + 0.085 * s, feature.z + edge.z, edgeWidth, 0.1 * s, length, COLORS.courtyardStone, feature.yaw);
+  }
+}
+
+function addChinaCourtyard(builder, feature) {
+  const s = feature.scale;
+  const width = feature.width ?? 18 * s;
+  const length = feature.length ?? 16 * s;
+  const border = Math.max(0.32 * s, 0.34);
+  addBox(builder, feature.x, feature.y + 0.045 * s, feature.z, width, 0.09 * s, length, COLORS.courtyardStone, feature.yaw);
+  for (const sign of [-1, 1]) {
+    const xEdge = transformLocal(sign * (width / 2 - border / 2), 0, feature.yaw);
+    addBox(builder, feature.x + xEdge.x, feature.y + 0.13 * s, feature.z + xEdge.z, border, 0.16 * s, length, COLORS.rock, feature.yaw);
+    const zEdge = transformLocal(0, sign * (length / 2 - border / 2), feature.yaw);
+    addBox(builder, feature.x + zEdge.x, feature.y + 0.13 * s, feature.z + zEdge.z, width, 0.16 * s, border, COLORS.rock, feature.yaw);
+  }
+  addBox(builder, feature.x, feature.y + 0.22 * s, feature.z, 1.2 * s, 0.34 * s, 1.2 * s, COLORS.templeGold, feature.yaw + Math.PI / 4);
+  for (const [lx, lz] of [[-0.34, 0.34], [0.34, -0.34]]) {
+    const lantern = transformLocal(lx * width, lz * length, feature.yaw);
+    addBox(builder, feature.x + lantern.x, feature.y + 0.72 * s, feature.z + lantern.z, 0.18 * s, 1.18 * s, 0.18 * s, COLORS.bark, feature.yaw);
+    addBox(builder, feature.x + lantern.x, feature.y + 1.32 * s, feature.z + lantern.z, 0.48 * s, 0.5 * s, 0.48 * s, COLORS.lanternRed, feature.yaw + Math.PI / 4);
+  }
+}
+
+function addMountainTemple(builder, feature) {
+  const s = feature.scale;
+  addBox(builder, feature.x, feature.y + 0.18 * s, feature.z, 4.7 * s, 0.36 * s, 3.9 * s, COLORS.snow, feature.yaw);
+  addBox(builder, feature.x, feature.y + 0.82 * s, feature.z, 3.7 * s, 1.28 * s, 2.9 * s, COLORS.templeWall, feature.yaw);
+  addTieredRoof(builder, feature.x, feature.y + 1.55 * s, feature.z, 4.9 * s, 1.0 * s, 3.9 * s, feature.yaw, COLORS.templeRed);
+  const bell = transformLocal(0, -1.95 * s, feature.yaw);
+  addBox(builder, feature.x + bell.x, feature.y + 1.1 * s, feature.z + bell.z, 0.42 * s, 0.9 * s, 0.18 * s, COLORS.templeGold, feature.yaw);
+}
+
+function addPillarTopTemple(builder, feature, snowy = false) {
+  const s = feature.scale;
+  const baseColor = snowy ? COLORS.snow : COLORS.inkStone;
+  const wallColor = snowy ? COLORS.iceShadow : COLORS.templeWall;
+  const roofColor = snowy ? COLORS.templeRed : COLORS.jadeRoof;
+  const capColor = snowy ? COLORS.snow : COLORS.rock;
+
+  addBox(builder, feature.x, feature.y + 0.12 * s, feature.z, 3.5 * s, 0.24 * s, 3.1 * s, baseColor, feature.yaw);
+  addBox(builder, feature.x, feature.y + 0.42 * s, feature.z, 2.65 * s, 0.24 * s, 2.32 * s, capColor, feature.yaw + 0.08);
+  addBox(builder, feature.x, feature.y + 1.12 * s, feature.z, 2.35 * s, 1.12 * s, 2.05 * s, wallColor, feature.yaw);
+  addTieredRoof(builder, feature.x, feature.y + 1.68 * s, feature.z, 3.15 * s, 0.78 * s, 2.82 * s, feature.yaw, roofColor);
+  addTieredRoof(builder, feature.x, feature.y + 2.28 * s, feature.z, 2.15 * s, 0.48 * s, 1.9 * s, feature.yaw, snowy ? COLORS.snowRoof : COLORS.templeRed);
+  if (snowy) {
+    addBox(builder, feature.x, feature.y + 2.38 * s, feature.z, 2.36 * s, 0.1 * s, 2.0 * s, COLORS.snow, feature.yaw);
+  }
+  for (const [lx, lz] of [[-1.18, -1.02], [1.18, -1.02], [-1.18, 1.02], [1.18, 1.02]]) {
+    const post = transformLocal(lx * s, lz * s, feature.yaw);
+    addBox(builder, feature.x + post.x, feature.y + 0.86 * s, feature.z + post.z, 0.18 * s, 1.04 * s, 0.18 * s, snowy ? COLORS.templeRed : COLORS.rock, feature.yaw);
+  }
+  const gate = transformLocal(0, -1.34 * s, feature.yaw);
+  addBox(builder, feature.x + gate.x, feature.y + 0.82 * s, feature.z + gate.z, 0.62 * s, 0.8 * s, 0.14 * s, snowy ? COLORS.templeGold : COLORS.templeRed, feature.yaw);
+}
+
+function addPagodaTower(builder, feature) {
+  const s = feature.scale;
+  for (let tier = 0; tier < 4; tier += 1) {
+    const tierScale = 1 - tier * 0.13;
+    const y = feature.y + (0.42 + tier * 0.92) * s;
+    addBox(builder, feature.x, y, feature.z, 2.0 * tierScale * s, 0.82 * s, 1.8 * tierScale * s, COLORS.templeWall, feature.yaw);
+    addTieredRoof(builder, feature.x, y + 0.48 * s, feature.z, 2.9 * tierScale * s, 0.46 * s, 2.55 * tierScale * s, feature.yaw, tier % 2 ? COLORS.jadeRoof : COLORS.templeRed);
+  }
+  addCone(builder, feature.x, feature.y + 4.25 * s, feature.z, 0.32 * s, 0.76 * s, 5, COLORS.templeGold, feature.yaw);
+}
+
+function addVillageLantern(builder, feature) {
+  const s = feature.scale;
+  addBox(builder, feature.x, feature.y + 1.0 * s, feature.z, 0.16 * s, 2.0 * s, 0.16 * s, COLORS.bark, feature.yaw);
+  addBox(builder, feature.x, feature.y + 1.82 * s, feature.z, 1.25 * s, 0.12 * s, 0.12 * s, COLORS.bark, feature.yaw);
+  for (const lx of [-0.48, 0.48]) {
+    const hook = transformLocal(lx * s, 0, feature.yaw);
+    addBox(builder, feature.x + hook.x, feature.y + 1.55 * s, feature.z + hook.z, 0.34 * s, 0.52 * s, 0.34 * s, COLORS.lanternRed, feature.yaw + Math.PI / 4);
+    addBox(builder, feature.x + hook.x, feature.y + 1.85 * s, feature.z + hook.z, 0.24 * s, 0.08 * s, 0.24 * s, COLORS.templeGold, feature.yaw);
+  }
+}
+
+function addTieredRoof(builder, x, y, z, width, height, depth, yaw, roofColor) {
+  addBox(builder, x, y, z, width, 0.16 * height, depth, COLORS.templeGold, yaw);
+  addGableRoof(builder, x, y + height * 0.08, z, width * 0.84, height, depth * 0.82, roofColor, yaw);
+  for (const sign of [-1, 1]) {
+    const eave = transformLocal(sign * width * 0.44, 0, yaw);
+    addBox(builder, x + eave.x, y + height * 0.1, z + eave.z, width * 0.16, height * 0.18, depth * 0.95, COLORS.templeGold, yaw + sign * 0.08);
+  }
 }
 
 function addDeadTree(builder, feature) {
