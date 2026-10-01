@@ -1,6 +1,7 @@
 import * as THREE from "../../platform/three.js";
 import { MATERIAL_IDS } from "../../config/game.js";
 import { getChunkSample } from "../generation/terrain.js";
+import { resolveWaterSurfaceHeight } from "./water-surface.js";
 
 const MATERIAL_COLORS = {
   [MATERIAL_IDS.river]: new THREE.Color(0x4aa6c4),
@@ -47,11 +48,11 @@ export function createTerrainChunkObject(chunk, { materials = createTerrainMater
       const se = getChunkSample(chunk, ix + 1, iz + 1);
       const samples = [nw, ne, sw, se];
       const materialIndex = resolveCellMaterial(...samples);
-      const waterLift = materialIndex === MATERIAL_IDS.river ? 0.22 : 0;
+      const waterHeight = materialIndex === MATERIAL_IDS.river ? resolveWaterSurfaceHeight(samples) : null;
       const color = resolveCellColor(samples, materialIndex);
 
-      pushTriangle(positions, colors, color, nw, sw, ne, waterLift);
-      pushTriangle(positions, colors, color, sw, se, ne, waterLift);
+      pushTriangle(positions, colors, color, nw, sw, ne, waterHeight);
+      pushTriangle(positions, colors, color, sw, se, ne, waterHeight);
     }
   }
 
@@ -144,13 +145,14 @@ function majorityBiome(samples) {
   return [...counts.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))[0]?.[0] ?? null;
 }
 
-function pushTriangle(positions, colors, color, a, b, c, lift = 0) {
-  pushPoint(positions, colors, color, a, lift);
-  pushPoint(positions, colors, color, b, lift);
-  pushPoint(positions, colors, color, c, lift);
+function pushTriangle(positions, colors, color, a, b, c, waterHeight = null) {
+  pushPoint(positions, colors, color, a, waterHeight);
+  pushPoint(positions, colors, color, b, waterHeight);
+  pushPoint(positions, colors, color, c, waterHeight);
 }
 
-function pushPoint(positions, colors, color, point, lift = 0) {
-  positions.push(point.worldX, point.height + lift, point.worldZ);
+function pushPoint(positions, colors, color, point, waterHeight = null) {
+  const y = Number.isFinite(waterHeight) ? waterHeight : point.height;
+  positions.push(point.worldX, y, point.worldZ);
   colors.push(color.r, color.g, color.b);
 }
