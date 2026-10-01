@@ -30,12 +30,18 @@ test("hud exposes compact pause/play and avatar thumbnail menu hooks", async () 
   assert.match(hud, /softskies-map-icon/);
   assert.match(hud, /aria-label="Choose map"/);
   assert.match(html, /softskies-map-card-in 0\.7s/);
-  assert.match(html, /\.softskies-map-backdrop[\s\S]*pointer-events: none/);
+  assert.match(html, /\.softskies-map-backdrop[\s\S]*place-items: center/);
+  assert.match(html, /\.softskies-map-backdrop[\s\S]*pointer-events: auto/);
   assert.match(html, /\.softskies-map-panel[\s\S]*pointer-events: auto/);
+  assert.match(html, /\.softskies-map-thumbnail[\s\S]*aspect-ratio: 16 \/ 10/);
   assert.doesNotMatch(html, /softskies-map-backdrop-fade/);
-  assert.match(hud, /softskies-map-backdrop/);
+  assert.match(hud, /root\.append\(overlay, mapDialog\)/);
+  assert.match(hud, /softskies-map-thumbnail/);
+  assert.doesNotMatch(hud, /softskies-map-option-description/);
+  assert.doesNotMatch(hud, /data-action="map-close"/);
   assert.match(hud, /onMapOpenChange\(open\)/);
   assert.match(hud, /softskies-avatar-thumb/);
+  assert.match(hud, /createDragonThumbnailDataUri/);
   assert.doesNotMatch(hud, /<select/);
   assert.doesNotMatch(hud, /Resume/);
 });
@@ -46,6 +52,7 @@ test("source entry imports Three.js through the project boundary and wires cloud
 
   assert.match(source, /import \* as THREE from "\.\/platform\/three\.js";/);
   assert.match(source, /import \{ createCloudLayer \} from "\.\/atmosphere\/clouds\.js";/);
+  assert.match(source, /import \{ createDragonView \} from "\.\/flight\/dragon-view\.js";/);
   assert.match(source, /let activeMap = getWorldMap\(DEFAULT_MAP_ID\);/);
   assert.match(source, /const cloudLayer = createCloudLayer\(scene\);/);
   assert.match(source, /cloudLayer\.update/);
@@ -74,7 +81,7 @@ test("phoenix source stays procedural and wires bounded fire and boost wind effe
     readProjectFile("src/flight/phoenix-view.js"),
   ]);
 
-  assert.match(source, /phoenix\.update\(dt, playableElapsed, updatedPose, \{/);
+  assert.match(source, /avatar\.update\(dt, playableElapsed, updatedPose, \{/);
   assert.match(source, /pitch: intent\.pitch/);
   assert.match(source, /roll: intent\.roll/);
   assert.match(source, /mousePitchDelta: intent\.mousePitchDelta/);
@@ -98,4 +105,23 @@ test("phoenix source stays procedural and wires bounded fire and boost wind effe
   assert.match(phoenix, /boost wingtip wind animation/);
   assert.match(phoenix, /WIND_STREAKS_PER_SIDE = 5/);
   assert.doesNotMatch(phoenix, /https?:\/\//);
+});
+
+test("dragon avatar is procedural, selectable, and animated with bounded color particles", async () => {
+  const [source, config, dragon] = await Promise.all([
+    readProjectFile("src/main.js"),
+    readProjectFile("src/config/game.js"),
+    readProjectFile("src/flight/dragon-view.js"),
+  ]);
+
+  assert.match(config, /AVATAR_OPTIONS/);
+  assert.match(config, /id: "dragon"/);
+  assert.match(source, /onAvatarChange\(avatarId\)/);
+  assert.match(source, /createAvatarView\(avatarId\)/);
+  assert.match(dragon, /procedural Chinese-inspired dragon avatar/);
+  assert.match(dragon, /smooth serpentine dragon flight animation rig/);
+  assert.match(dragon, /DRAGON_PARTICLE_COUNT = 96/);
+  assert.match(dragon, /bounded procedural color particles flying around dragon/);
+  assert.match(dragon, /updateDragonParticles/);
+  assert.doesNotMatch(dragon, /TextureLoader|VideoTexture|\.mp4|https?:\/\//);
 });

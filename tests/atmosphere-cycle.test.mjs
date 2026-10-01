@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
-import { hexChannel, sampleAtmospherePalette, sampleSunCycle } from "../src/atmosphere/day-night.js";
+import { advanceAtmospherePhase, hexChannel, sampleAtmospherePalette, sampleSunCycle } from "../src/atmosphere/day-night.js";
 
 const rootUrl = new URL("../", import.meta.url);
 
@@ -43,6 +43,20 @@ test("sun height, star visibility, and day/night duration align", () => {
   }
 
   assert.ok(Math.abs(daySamples - nightSamples) <= 1, "night should last the same normalized time as day");
+
+  let elapsedDaySamples = 0;
+  let elapsedNightSamples = 0;
+  const config = { dayLengthSeconds: 180, timeScale: 0.5, startPhase: 0 };
+  for (let elapsed = 0; elapsed < 360; elapsed += 0.5) {
+    const phase = advanceAtmospherePhase(elapsed, config);
+    const cycle = sampleSunCycle(phase);
+    if (cycle.dayFactor > cycle.nightFactor) {
+      elapsedDaySamples += 1;
+    } else if (cycle.nightFactor > cycle.dayFactor) {
+      elapsedNightSamples += 1;
+    }
+  }
+  assert.ok(Math.abs(elapsedDaySamples - elapsedNightSamples) <= 1, "elapsed night duration should match elapsed day duration");
 });
 
 test("night sky stays procedural, bounded, and wired into the atmosphere", async () => {
@@ -52,13 +66,15 @@ test("night sky stays procedural, bounded, and wired into the atmosphere", async
   ]);
 
   assert.match(sky, /createNightSky\(starHook\)/);
-  assert.match(stars, /MILKY_WAY_BAND_STARS = 620/);
+  assert.match(stars, /MILKY_WAY_BAND_STARS = 720/);
   assert.match(stars, /createMilkyWayHaze/);
   assert.match(stars, /ShaderMaterial/);
   assert.match(stars, /soft layered sky-bound procedural Milky Way haze/);
   assert.match(stars, /MILKY_WAY_CORE_LONGITUDE = 0\.62/);
   assert.match(stars, /MILKY_WAY_CORE_LATITUDE = 0\.38/);
-  assert.match(stars, /milkyWayHaze\.material\.uniforms\.opacity\.value = visibility/);
+  assert.match(stars, /milkyWayHaze\.material\.uniforms\.opacity\.value = Math\.min\(1\.35, visibility \* 1\.35\)/);
+  assert.match(stars, /points\.renderOrder = 42/);
+  assert.match(stars, /mesh\.renderOrder = 40/);
   assert.doesNotMatch(stars, /depthTest: false/);
   assert.doesNotMatch(stars, /createMilkyWayRibbon|createMilkyWayCoreGlow|CircleGeometry/);
   assert.match(stars, /procedural Milky Way/);

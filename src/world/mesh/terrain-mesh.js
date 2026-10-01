@@ -18,6 +18,10 @@ const BIOME_COLORS = {
   "desert-rock": new THREE.Color(0xaa8760),
   "red-sand": new THREE.Color(0xc4694a),
   oasis: new THREE.Color(0x70b96a),
+  plains: new THREE.Color(0x78c96c),
+  forest: new THREE.Color(0x3c9658),
+  "stone-forest": new THREE.Color(0x8b9a9a),
+  "snowy-mountain": new THREE.Color(0xe8f5ff),
 };
 
 export function createTerrainMaterialPalette() {
@@ -110,6 +114,18 @@ function resolveCellColor(samples, materialIndex) {
   }
   if (biome === "jungle") {
     return materialIndex === MATERIAL_IDS.rock ? MATERIAL_COLORS[MATERIAL_IDS.rock] : BIOME_COLORS.jungle;
+  }
+  if (biome === "stone-forest") {
+    return materialIndex === MATERIAL_IDS.meadow ? BIOME_COLORS.oasis : BIOME_COLORS["stone-forest"];
+  }
+  if (biome === "snowy-mountain") {
+    return materialIndex === MATERIAL_IDS.rock ? MATERIAL_COLORS[MATERIAL_IDS.rock] : BIOME_COLORS["snowy-mountain"];
+  }
+  if (biome === "forest") {
+    return materialIndex === MATERIAL_IDS.rock ? MATERIAL_COLORS[MATERIAL_IDS.rock] : BIOME_COLORS.forest;
+  }
+  if (biome === "plains") {
+    return materialIndex === MATERIAL_IDS.rock ? MATERIAL_COLORS[MATERIAL_IDS.rock] : BIOME_COLORS.plains;
   }
   if (samples.some((sample) => sample.biome && sample.waterBankStrength > 0.12)) {
     return BIOME_COLORS.oasis;

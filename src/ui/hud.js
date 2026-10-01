@@ -1,5 +1,6 @@
 const DEFAULT_AVATARS = Object.freeze([
-  { id: "phoenix", label: "Phoenix", thumbnailSrc: createPhoenixThumbnailDataUri() },
+  { id: "phoenix", label: "Phoenix", thumbnailTheme: "phoenix" },
+  { id: "dragon", label: "Dragon", thumbnailTheme: "dragon" },
 ]);
 
 const DEFAULT_MAPS = Object.freeze([
@@ -7,6 +8,19 @@ const DEFAULT_MAPS = Object.freeze([
     id: "classic-highlands",
     label: "Classic Highlands",
     description: "The original Soft Skies plains, rivers, villages, mountains, and snowfields.",
+    thumbnailTheme: "highlands",
+  },
+  {
+    id: "sunspice-wilds",
+    label: "Sunspice Wilds",
+    description: "Jungles, rainforests, and hilly deserts with biome-themed ruins and villages.",
+    thumbnailTheme: "sunspice",
+  },
+  {
+    id: "jade-provinces",
+    label: "Jade Provinces",
+    description: "Ancient Chinese-inspired stone forests, temple mountains, and villages.",
+    thumbnailTheme: "jade",
   },
 ]);
 
@@ -35,25 +49,26 @@ export function createHud(root, {
         <path d="M9 3v15M15 6v15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
       </svg>
     </button>
-    <div class="softskies-map-backdrop" data-role="map-dialog" role="dialog" aria-modal="true" aria-labelledby="softskies-map-title" hidden>
-      <section class="softskies-map-panel">
-        <div class="softskies-map-header">
-          <h2 id="softskies-map-title" class="softskies-map-title">Choose map</h2>
-          <button type="button" class="softskies-ui-button" data-action="map-close" aria-label="Close map choices">Close</button>
-        </div>
-        <div class="softskies-map-options" data-role="map-options"></div>
-      </section>
-    </div>
   `;
-  root.append(overlay);
+  const mapDialog = document.createElement("div");
+  mapDialog.className = "softskies-map-backdrop";
+  mapDialog.dataset.role = "map-dialog";
+  mapDialog.setAttribute("role", "dialog");
+  mapDialog.setAttribute("aria-modal", "true");
+  mapDialog.setAttribute("aria-label", "Choose map");
+  mapDialog.hidden = true;
+  mapDialog.innerHTML = `
+    <section class="softskies-map-panel">
+      <div class="softskies-map-options" data-role="map-options"></div>
+    </section>
+  `;
+  root.append(overlay, mapDialog);
 
   const pauseButton = overlay.querySelector('[data-action="pause"]');
   const avatarTrigger = overlay.querySelector('[data-action="avatar-trigger"]');
   const avatarMenu = overlay.querySelector('[data-role="avatar-menu"]');
   const mapTrigger = overlay.querySelector('[data-action="map-trigger"]');
-  const mapDialog = overlay.querySelector('[data-role="map-dialog"]');
-  const mapClose = overlay.querySelector('[data-action="map-close"]');
-  const mapOptions = overlay.querySelector('[data-role="map-options"]');
+  const mapOptions = mapDialog.querySelector('[data-role="map-options"]');
   const avatarButtons = new Map();
   const mapButtons = new Map();
 
@@ -68,7 +83,7 @@ export function createHud(root, {
     const thumbnail = document.createElement("img");
     thumbnail.className = "softskies-avatar-thumb";
     thumbnail.alt = "";
-    thumbnail.src = avatar.thumbnailSrc ?? createPhoenixThumbnailDataUri();
+    thumbnail.src = avatar.thumbnailSrc ?? createAvatarThumbnailDataUri(avatar.thumbnailTheme ?? avatar.id);
     thumbnail.width = 48;
     thumbnail.height = 36;
     thumbnail.decoding = "async";
@@ -97,11 +112,12 @@ export function createHud(root, {
     button.className = "softskies-map-option";
     button.dataset.mapId = map.id;
     button.innerHTML = `
+      <img class="softskies-map-thumbnail" alt="" width="192" height="120" decoding="async" draggable="false" />
       <span class="softskies-map-option-title"></span>
-      <span class="softskies-map-option-description"></span>
     `;
+    button.setAttribute("aria-label", `Choose ${map.label}`);
+    button.querySelector(".softskies-map-thumbnail").src = map.thumbnailSrc ?? createMapThumbnailDataUri(map.thumbnailTheme ?? map.id);
     button.querySelector(".softskies-map-option-title").textContent = map.label;
-    button.querySelector(".softskies-map-option-description").textContent = map.description ?? "Explore this generated world.";
     mapOptions.append(button);
     mapButtons.set(map.id, button);
   }
@@ -192,10 +208,6 @@ export function createHud(root, {
     toggleMapDialog();
   }
 
-  function handleMapCloseClick() {
-    toggleMapDialog(false);
-  }
-
   function handleMapDialogClick(event) {
     if (event.target === mapDialog) {
       toggleMapDialog(false);
@@ -233,7 +245,6 @@ export function createHud(root, {
   avatarTrigger.addEventListener("click", handleAvatarTriggerClick);
   avatarMenu.addEventListener("click", handleAvatarMenuClick);
   mapTrigger.addEventListener("click", handleMapTriggerClick);
-  mapClose.addEventListener("click", handleMapCloseClick);
   mapDialog.addEventListener("click", handleMapDialogClick);
   document.addEventListener("click", handleDocumentClick);
   document.addEventListener("keydown", handleDocumentKeyDown);
@@ -251,13 +262,87 @@ export function createHud(root, {
       avatarTrigger.removeEventListener("click", handleAvatarTriggerClick);
       avatarMenu.removeEventListener("click", handleAvatarMenuClick);
       mapTrigger.removeEventListener("click", handleMapTriggerClick);
-      mapClose.removeEventListener("click", handleMapCloseClick);
       mapDialog.removeEventListener("click", handleMapDialogClick);
       document.removeEventListener("click", handleDocumentClick);
       document.removeEventListener("keydown", handleDocumentKeyDown);
       overlay.remove();
+      mapDialog.remove();
     },
   };
+}
+
+function createAvatarThumbnailDataUri(theme) {
+  if (theme === "dragon") {
+    return createDragonThumbnailDataUri();
+  }
+  return createPhoenixThumbnailDataUri();
+}
+
+function createMapThumbnailDataUri(theme) {
+  const palettes = {
+    highlands: {
+      sky: "#76d8ff",
+      ground: "#6bc66a",
+      mountain: "#7d8a93",
+      accent: "#f5fbff",
+      river: "#4aa6c4",
+    },
+    sunspice: {
+      sky: "#ffd08a",
+      ground: "#d3ad5d",
+      mountain: "#aa8760",
+      accent: "#2f9b4f",
+      river: "#70b96a",
+    },
+    jade: {
+      sky: "#b9ecff",
+      ground: "#78c96c",
+      mountain: "#69757a",
+      accent: "#a83e2d",
+      river: "#2e8c68",
+    },
+  };
+  const palette = palettes[theme] ?? palettes.highlands;
+  const temple = theme === "jade"
+    ? `<rect x="118" y="58" width="38" height="22" fill="${palette.accent}"/><polygon points="112,58 162,58 154,48 120,48" fill="#2e8c68"/><rect x="129" y="70" width="8" height="10" fill="#f0c45a"/>`
+    : "";
+  const cactus = theme === "sunspice"
+    ? `<rect x="134" y="62" width="7" height="28" rx="3" fill="#5b9855"/><rect x="124" y="70" width="18" height="5" rx="2" fill="#5b9855"/><rect x="158" y="66" width="5" height="18" rx="2" fill="#5b9855"/>`
+    : "";
+  const svg = `
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 120" role="img" aria-label="Soft Skies map thumbnail">
+      <rect width="192" height="120" rx="14" fill="${palette.sky}"/>
+      <circle cx="156" cy="26" r="14" fill="#ffe07a" opacity="0.9"/>
+      <polygon points="0,92 38,36 82,92" fill="${palette.mountain}"/>
+      <polygon points="46,92 94,24 144,92" fill="${palette.mountain}" opacity="0.92"/>
+      <polygon points="90,92 134,42 192,92" fill="${palette.mountain}" opacity="0.78"/>
+      <polygon points="0,78 52,56 100,76 154,58 192,74 192,120 0,120" fill="${palette.ground}"/>
+      <path d="M20 112 C54 92, 70 106, 96 86 S143 76, 174 96" fill="none" stroke="${palette.river}" stroke-width="8" stroke-linecap="round" opacity="0.9"/>
+      <polygon points="78,32 94,24 109,34 101,40 91,36 83,41" fill="${palette.accent}" opacity="0.95"/>
+      ${temple}${cactus}
+    </svg>
+  `.trim();
+  return `data:image/svg+xml,${encodeURIComponent(svg)}`;
+}
+
+function createDragonThumbnailDataUri() {
+  const svg = `
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 72" role="img" aria-label="Low-poly dragon thumbnail">
+      <rect width="96" height="72" rx="12" fill="#12333a"/>
+      <path d="M14 47 C25 23, 42 55, 57 32 S83 34, 76 52" fill="none" stroke="#2bbf7c" stroke-width="10" stroke-linecap="round"/>
+      <path d="M15 46 C26 24, 42 55, 57 32 S82 34, 75 52" fill="none" stroke="#f0c45a" stroke-width="4" stroke-linecap="round" opacity="0.9"/>
+      <polygon points="63,24 78,30 69,39" fill="#2bbf7c"/>
+      <polygon points="72,23 85,20 77,30" fill="#ffdf7a"/>
+      <polygon points="63,23 58,13 69,22" fill="#ffdf7a"/>
+      <circle cx="73" cy="30" r="2" fill="#fff5a0"/>
+      <polygon points="35,24 39,13 43,25" fill="#b93635"/>
+      <polygon points="46,39 50,27 53,39" fill="#b93635"/>
+      <circle cx="19" cy="21" r="3" fill="#72d7ff"/>
+      <circle cx="33" cy="15" r="2" fill="#6fffd1"/>
+      <circle cx="84" cy="48" r="3" fill="#ff7ac8"/>
+    </svg>
+  `.trim();
+  return `data:image/svg+xml,${encodeURIComponent(svg)}`;
 }
 
 function createPhoenixThumbnailDataUri() {

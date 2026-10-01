@@ -6,6 +6,9 @@ export function sampleBaseTerrain(seed = WORLD_SEED, worldX = 0, worldZ = 0, { p
   if (profile === "sunspice-wilds") {
     return sampleSunspiceBaseTerrain(seedHash, worldX, worldZ);
   }
+  if (profile === "jade-provinces") {
+    return sampleJadeBaseTerrain(seedHash, worldX, worldZ);
+  }
   return sampleHighlandsBaseTerrain(seedHash, worldX, worldZ);
 }
 
@@ -120,6 +123,88 @@ function sampleSunspiceBaseTerrain(seedHash, worldX, worldZ) {
     desert,
     rainforest,
     jungle,
+    biome,
+  };
+}
+
+function sampleJadeBaseTerrain(seedHash, worldX, worldZ) {
+  const plains = fbm2(seedHash ^ 0x6a6de, worldX, worldZ, {
+    frequency: 0.0019,
+    octaves: 4,
+    gain: 0.54,
+  });
+  const smallHills = fbm2(seedHash ^ 0x516675, worldX, worldZ, {
+    frequency: 0.0072,
+    octaves: 4,
+    gain: 0.5,
+  });
+  const ridges = ridgedFbm2(seedHash ^ 0x5e1f, worldX, worldZ, {
+    frequency: 0.0049,
+    octaves: 5,
+    gain: 0.53,
+  });
+  const pillarRidges = ridgedFbm2(seedHash ^ 0x5109e, worldX, worldZ, {
+    frequency: 0.0105,
+    octaves: 4,
+    gain: 0.48,
+  });
+  const frost = fbm2(seedHash ^ 0x50a9, worldX, worldZ, {
+    frequency: 0.00125,
+    octaves: 4,
+    gain: 0.56,
+  });
+  const forestField = fbm2(seedHash ^ 0xf0e57, worldX, worldZ, {
+    frequency: 0.0022,
+    octaves: 3,
+    gain: 0.5,
+  });
+  const stoneField = fbm2(seedHash ^ 0x5707e, worldX, worldZ, {
+    frequency: 0.00155,
+    octaves: 4,
+    gain: 0.58,
+  });
+  const snowMask = smoothstep(0.18, 0.62, frost + ridges * 0.4 + plains * 0.18);
+  const stoneForest = (1 - snowMask * 0.42) * smoothstep(0.08, 0.48, stoneField + pillarRidges * 0.34 - forestField * 0.12);
+  const forest = (1 - snowMask) * (1 - stoneForest * 0.55) * smoothstep(-0.2, 0.44, forestField + plains * 0.16);
+  const plainsBiome = Math.max(0, 1 - Math.max(snowMask, stoneForest, forest * 0.78));
+  const hillMask = smoothstep(-0.2, 0.56, plains + ridges * 0.35);
+  const stoneNeedles = Math.pow(pillarRidges, 2.1) * stoneForest;
+  const mountainHeight = snowMask * (34 + ridges * 66 + hillMask * 18);
+  const stoneHeight = stoneForest * (10 + ridges * 24 + stoneNeedles * 74);
+  const forestHeight = forest * (5 + hillMask * 12 + ridges * 8);
+  const terrace = Math.floor((smallHills * 0.5 + 0.5) * 5) / 5;
+  const height = 3.2
+    + plains * 7.4
+    + terrace * 4.2
+    + mountainHeight
+    + stoneHeight
+    + forestHeight;
+  const mountain = clamp(snowMask * 0.88 + stoneForest * (0.34 + pillarRidges * 0.44) + hillMask * 0.22);
+  const slopeProxy = clamp(ridges * (0.3 + snowMask * 0.54 + stoneForest * 0.46) + Math.abs(smallHills) * 0.36 + pillarRidges * stoneForest * 0.42);
+  const biome = snowMask > 0.58
+    ? "snowy-mountain"
+    : stoneForest > 0.56
+      ? "stone-forest"
+      : forest > 0.46
+        ? "forest"
+        : "plains";
+
+  return {
+    height,
+    plains,
+    smallHills,
+    mountainField: frost * 0.5 + 0.5,
+    ridges,
+    pillarRidges,
+    mountain,
+    slopeProxy,
+    frost,
+    forestField,
+    stoneField,
+    snowMask,
+    stoneForest,
+    forest,
+    plainsBiome,
     biome,
   };
 }

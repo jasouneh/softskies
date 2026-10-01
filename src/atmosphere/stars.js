@@ -4,8 +4,8 @@ import { hash2, lerp, normalizeSeed, smoothstep } from "../world/generation/nois
 
 const TAU = Math.PI * 2;
 const STAR_DOME_RADIUS = 640;
-const BACKGROUND_STAR_COUNT = 420;
-const MILKY_WAY_BAND_STARS = 620;
+const BACKGROUND_STAR_COUNT = 520;
+const MILKY_WAY_BAND_STARS = 720;
 const MILKY_WAY_SEGMENTS = 144;
 const MILKY_WAY_WIDTH_SEGMENTS = 14;
 const MILKY_WAY_CORE_LONGITUDE = 0.62;
@@ -28,10 +28,10 @@ export function createNightSky(parent, { seed = WORLD_SEED } = {}) {
   setVisibility(0);
 
   function setVisibility(nightFactor = 0) {
-    const visibility = smoothstep(0.54, 0.82, nightFactor);
+    const visibility = smoothstep(0.5, 0.74, nightFactor);
     group.visible = visibility > 0.01;
-    starField.material.opacity = 0.72 * visibility;
-    milkyWayHaze.material.uniforms.opacity.value = visibility;
+    starField.material.opacity = 0.95 * visibility;
+    milkyWayHaze.material.uniforms.opacity.value = Math.min(1.35, visibility * 1.35);
     return visibility;
   }
 
@@ -89,7 +89,7 @@ function createStarField(seedHash) {
 
   const material = new THREE.PointsMaterial({
     name: "subtle procedural star glow material",
-    size: 1.7,
+    size: 2.25,
     sizeAttenuation: false,
     transparent: true,
     opacity: 0,
@@ -102,7 +102,7 @@ function createStarField(seedHash) {
   const points = new THREE.Points(geometry, material);
   points.name = "bounded subtle procedural stars and Milky Way points";
   points.frustumCulled = false;
-  points.renderOrder = -20;
+  points.renderOrder = 42;
 
   return { points, material };
 }
@@ -126,11 +126,11 @@ function createMilkyWayHaze(seedHash) {
       const offset = t * 2 - 1;
       const latitude = centerLatitude + offset * width;
       galacticDirection(longitude, latitude, direction);
-      const horizon = smoothstep(0.035, 0.18, direction.y);
-      const edge = Math.pow(Math.max(0, 1 - Math.abs(offset)), 1.65);
-      const darkLane = 1 - 0.5 * Math.exp(-((offset + 0.22 + Math.sin(longitude * 1.7) * 0.08) ** 2) / 0.018);
+      const horizon = smoothstep(0.0, 0.12, direction.y);
+      const edge = Math.pow(Math.max(0, 1 - Math.abs(offset)), 1.45);
+      const darkLane = 1 - 0.44 * Math.exp(-((offset + 0.22 + Math.sin(longitude * 1.7) * 0.08) ** 2) / 0.018);
       const softKnots = 0.66 + 0.34 * dustLane(seedHash ^ 0x517a, longitude * 1.9 + offset * 0.45);
-      const alpha = (0.045 + lane * 0.038 + core * 0.09) * edge * darkLane * softKnots * horizon;
+      const alpha = (0.095 + lane * 0.068 + core * 0.16) * edge * darkLane * softKnots * horizon;
       const warmth = core * 0.18;
 
       positions.push(direction.x * STAR_DOME_RADIUS * 0.986, direction.y * STAR_DOME_RADIUS * 0.986, direction.z * STAR_DOME_RADIUS * 0.986);
@@ -192,7 +192,7 @@ function createMilkyWayHaze(seedHash) {
   const mesh = new THREE.Mesh(geometry, material);
   mesh.name = "soft layered sky-bound procedural Milky Way haze";
   mesh.frustumCulled = false;
-  mesh.renderOrder = -30;
+  mesh.renderOrder = 40;
   return mesh;
 }
 

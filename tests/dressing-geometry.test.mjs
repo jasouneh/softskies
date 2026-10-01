@@ -32,6 +32,13 @@ test("village and biome specialty features generate low-poly geometry", () => {
     { type: "desert-palm", x: 64, y: 1, z: 0, yaw: 1.8, scale: 1 },
     { type: "cactus", x: 72, y: 1, z: 0, yaw: 2.0, scale: 1 },
     { type: "waterfall", x: 80, y: 1, z: 0, yaw: 2.2, scale: 1 },
+    { type: "stone-pillar", x: 88, y: 1, z: 0, yaw: 2.4, scale: 1 },
+    { type: "mist-pine", x: 96, y: 1, z: 0, yaw: 2.6, scale: 1 },
+    { type: "china-house", x: 104, y: 1, z: 0, yaw: 2.8, scale: 1 },
+    { type: "china-hall", x: 112, y: 1, z: 0, yaw: 3.0, scale: 1 },
+    { type: "mountain-temple", x: 120, y: 1, z: 0, yaw: 3.2, scale: 1 },
+    { type: "pagoda-tower", x: 128, y: 1, z: 0, yaw: 3.4, scale: 1 },
+    { type: "village-lantern", x: 136, y: 1, z: 0, yaw: 3.6, scale: 1 },
   ];
   const geometry = createDressingGeometryData({ key: "village-detail-test", features });
 

@@ -107,6 +107,7 @@ test("sunspice wilds map has jungle, rainforest, hilly desert, and themed struct
   let oasisSamples = 0;
   let desertChunks = 0;
   let redSandChunks = 0;
+  let desertStructureCount = 0;
 
   for (let chunkZ = -4; chunkZ <= 4; chunkZ += 1) {
     for (let chunkX = -4; chunkX <= 4; chunkX += 1) {
@@ -139,6 +140,10 @@ test("sunspice wilds map has jungle, rainforest, hilly desert, and themed struct
       }
 
       const dressing = generateChunkDressing(wilds.seed, chunkX, chunkZ, { ...WORLD_CONFIG, map: wilds });
+      desertStructureCount += (dressing.stats.counts.cactus ?? 0)
+        + (dressing.stats.counts["desert-camp"] ?? 0)
+        + (dressing.stats.counts["desert-ruin"] ?? 0)
+        + (dressing.stats.counts["desert-palm"] ?? 0);
       for (const [type, count] of Object.entries(dressing.stats.counts)) {
         structureCounts.set(type, (structureCounts.get(type) ?? 0) + count);
       }
@@ -157,6 +162,52 @@ test("sunspice wilds map has jungle, rainforest, hilly desert, and themed struct
   assert.ok((structureCounts.get("waterfall") ?? 0) > 0, "hilly wet biomes should generate waterfalls");
   assert.ok((structureCounts.get("cactus") ?? 0) > 0, "desert should generate cacti");
   assert.ok((structureCounts.get("desert-camp") ?? 0) + (structureCounts.get("desert-ruin") ?? 0) > 0, "desert should generate camps or ruins");
+  assert.ok(desertStructureCount > 250, "desert coverage should be dense enough to avoid barren fly-throughs");
+});
+
+test("jade provinces map has stone forests, snowy temple mountains, and large villages", () => {
+  const jade = WORLD_MAPS.find((map) => map.id === "jade-provinces");
+  const biomes = new Set();
+  const structureCounts = new Map();
+  let tallStoneSamples = 0;
+  let highSnowSamples = 0;
+  let villageBiomeSamples = 0;
+
+  for (let chunkZ = -5; chunkZ <= 5; chunkZ += 1) {
+    for (let chunkX = -5; chunkX <= 5; chunkX += 1) {
+      const chunk = generateTerrainChunk(jade.seed, chunkX, chunkZ, { ...WORLD_CONFIG, map: jade });
+      for (const sample of chunk.samples) {
+        biomes.add(sample.biome);
+        if (sample.biome === "stone-forest" && sample.height > 45) {
+          tallStoneSamples += 1;
+        }
+        if (sample.biome === "snowy-mountain" && sample.height > 60) {
+          highSnowSamples += 1;
+        }
+        if (sample.biome === "plains" || sample.biome === "forest") {
+          villageBiomeSamples += 1;
+        }
+      }
+
+      const dressing = generateChunkDressing(jade.seed, chunkX, chunkZ, { ...WORLD_CONFIG, map: jade });
+      for (const [type, count] of Object.entries(dressing.stats.counts)) {
+        structureCounts.set(type, (structureCounts.get(type) ?? 0) + count);
+      }
+    }
+  }
+
+  assert.ok(biomes.has("stone-forest"));
+  assert.ok(biomes.has("snowy-mountain"));
+  assert.ok(biomes.has("plains"));
+  assert.ok(biomes.has("forest"));
+  assert.ok(tallStoneSamples > 1000, "stone forest should include tall rock-tree mountain samples");
+  assert.ok(highSnowSamples > 1000, "snowy mountain biome should include high peaks");
+  assert.ok(villageBiomeSamples > 1000, "normal plains and forests should occupy meaningful village terrain");
+  assert.ok((structureCounts.get("stone-pillar") ?? 0) > 0, "stone forest should generate rock-tree pillars");
+  assert.ok((structureCounts.get("mountain-temple") ?? 0) > 0, "snowy mountains should generate temples");
+  assert.ok((structureCounts.get("pagoda-tower") ?? 0) > 0, "Chinese-inspired map should generate pagoda towers");
+  assert.ok((structureCounts.get("china-house") ?? 0) > 100, "plains and forests should generate large villages");
+  assert.ok((structureCounts.get("china-hall") ?? 0) > 0, "large villages should include central halls");
 });
 
 test("chunk dressing is deterministic and bounded", () => {

@@ -11,6 +11,9 @@ export function sampleTerrain(seed = WORLD_SEED, worldX = 0, worldZ = 0, options
   if (mapOptions.profile === "sunspice-wilds") {
     return sampleSunspiceTerrain(seedHash, base, worldX, worldZ);
   }
+  if (mapOptions.profile === "jade-provinces") {
+    return sampleJadeTerrain(seedHash, base, worldX, worldZ);
+  }
 
   const { plains, mountain: massif, slopeProxy } = base;
   const rawRiver = sampleRiver(seedHash, worldX, worldZ);
@@ -138,7 +141,7 @@ export function getChunkBorderHeights(chunk, side) {
 
 function resolveTerrainOptions(seed, { map, profile } = {}) {
   return {
-    profile: profile ?? map?.terrainProfile ?? (String(seed).includes("sunspice-wilds") ? "sunspice-wilds" : "highlands"),
+    profile: profile ?? map?.terrainProfile ?? (String(seed).includes("sunspice-wilds") ? "sunspice-wilds" : String(seed).includes("jade-provinces") ? "jade-provinces" : "highlands"),
     map,
   };
 }
@@ -303,6 +306,75 @@ function chooseSunspiceMaterial({ height, biome, waterStrength, bankStrength, sl
   }
 
   return biome === "rainforest" ? MATERIAL_IDS.meadow : MATERIAL_IDS.grass;
+}
+
+function sampleJadeTerrain(seedHash, base, worldX, worldZ) {
+  const { plains, mountain: massif, slopeProxy, biome } = base;
+  const rawRiver = sampleRiver(seedHash, worldX, worldZ);
+  const rawLake = sampleLake(seedHash, worldX, worldZ);
+  const lowlandFactor = (1 - smoothstep(0.34, 0.62, massif)) * (1 - smoothstep(42, 68, base.height));
+  const gentleFactor = 1 - smoothstep(0.48, 0.82, slopeProxy);
+  const villageValleyFactor = biome === "plains" || biome === "forest" ? 1 : biome === "stone-forest" ? 0.42 : 0.16;
+  const riverStrength = rawRiver.strength * lowlandFactor * gentleFactor * villageValleyFactor;
+  const riverBankStrength = rawRiver.bankStrength * lowlandFactor * gentleFactor * villageValleyFactor;
+  const lakeSuitability = (1 - smoothstep(0.24, 0.5, massif))
+    * (1 - smoothstep(28, 48, base.height))
+    * (1 - smoothstep(0.24, 0.45, slopeProxy))
+    * (biome === "plains" || biome === "forest" ? 1 : 0.28);
+  const lakeStrength = rawLake.strength * lakeSuitability;
+  const lakeBankStrength = rawLake.bankStrength * lakeSuitability;
+  const waterStrength = Math.max(riverStrength, lakeStrength);
+  const bankStrength = Math.max(riverBankStrength, lakeBankStrength);
+  const waterCut = Math.max(riverBankStrength * 2 + riverStrength * 3.4, lakeBankStrength * 1.5 + lakeStrength * 4.4);
+  const height = base.height - waterCut;
+  const material = chooseJadeMaterial({ height, biome, waterStrength, bankStrength, slopeProxy, massif, plains });
+
+  return {
+    height,
+    material,
+    materialName: MATERIAL_NAMES[material],
+    biome,
+    biomeName: biome,
+    riverStrength,
+    riverDistance: rawRiver.distance,
+    riverWidth: rawRiver.width,
+    riverBankStrength,
+    lakeStrength,
+    lakeDistance: rawLake.distance,
+    lakeRadius: rawLake.radius,
+    lakeBankStrength,
+    waterStrength,
+    waterBankStrength: bankStrength,
+    mountain: massif,
+    slope: slopeProxy,
+    plains,
+    snowMask: base.snowMask,
+    stoneForest: base.stoneForest,
+    forest: base.forest,
+    pillarRidges: base.pillarRidges,
+  };
+}
+
+function chooseJadeMaterial({ height, biome, waterStrength, bankStrength, slopeProxy, massif, plains }) {
+  if (waterStrength > 0.24) {
+    return MATERIAL_IDS.river;
+  }
+  if (biome === "snowy-mountain" || (height > 76 && massif > 0.52)) {
+    return slopeProxy > 0.72 && height < 88 ? MATERIAL_IDS.rock : MATERIAL_IDS.snow;
+  }
+  if (biome === "stone-forest") {
+    return bankStrength > 0.18 ? MATERIAL_IDS.meadow : MATERIAL_IDS.rock;
+  }
+  if (bankStrength > 0.18 || waterStrength > 0.05) {
+    return MATERIAL_IDS.meadow;
+  }
+  if (slopeProxy > 0.64 || height > 44) {
+    return MATERIAL_IDS.rock;
+  }
+  if (biome === "forest" || plains > -0.05) {
+    return MATERIAL_IDS.grass;
+  }
+  return MATERIAL_IDS.meadow;
 }
 
 function chooseMaterial({ height, massif, waterStrength, bankStrength, slopeProxy, plains }) {

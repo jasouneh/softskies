@@ -7,6 +7,7 @@ export const WORLD_MAPS = Object.freeze([
     description: "The original Soft Skies plains, rivers, villages, mountains, and snowfields.",
     seed: WORLD_SEED,
     terrainProfile: "highlands",
+    thumbnailTheme: "highlands",
   },
   {
     id: "sunspice-wilds",
@@ -14,8 +15,24 @@ export const WORLD_MAPS = Object.freeze([
     description: "Jungles, rainforests, and hilly deserts with biome-themed ruins and villages.",
     seed: "softskies-sunspice-wilds-v1",
     terrainProfile: "sunspice-wilds",
+    thumbnailTheme: "sunspice",
+  },
+  {
+    id: "jade-provinces",
+    label: "Jade Provinces",
+    description: "Ancient Chinese-inspired stone forests, temple-topped snowy mountains, and village plains.",
+    seed: "softskies-jade-provinces-v1",
+    terrainProfile: "jade-provinces",
+    thumbnailTheme: "jade",
   },
 ]);
+
+export const AVATAR_OPTIONS = Object.freeze([
+  { id: "phoenix", label: "Phoenix", thumbnailTheme: "phoenix" },
+  { id: "dragon", label: "Dragon", thumbnailTheme: "dragon" },
+]);
+
+export const DEFAULT_AVATAR_ID = AVATAR_OPTIONS[0].id;
 
 export const DEFAULT_MAP_ID = WORLD_MAPS[0].id;
 

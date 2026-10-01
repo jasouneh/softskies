@@ -22,6 +22,13 @@ const FEATURE_TYPES = [
   "desert-ruin",
   "cactus",
   "waterfall",
+  "stone-pillar",
+  "mist-pine",
+  "china-house",
+  "china-hall",
+  "mountain-temple",
+  "pagoda-tower",
+  "village-lantern",
 ];
 
 export function generateChunkDressing(seed = WORLD_SEED, chunkX = 0, chunkZ = 0, {
@@ -34,6 +41,9 @@ export function generateChunkDressing(seed = WORLD_SEED, chunkX = 0, chunkZ = 0,
   const dressingProfile = resolveDressingProfile(seed, { map, profile });
   if (dressingProfile === "sunspice-wilds") {
     return generateSunspiceChunkDressing(seed, chunkX, chunkZ, { chunkSize, cells, maxFeatures, map, profile: dressingProfile });
+  }
+  if (dressingProfile === "jade-provinces") {
+    return generateJadeChunkDressing(seed, chunkX, chunkZ, { chunkSize, cells, maxFeatures, map, profile: dressingProfile });
   }
 
   return generateHighlandsChunkDressing(seed, chunkX, chunkZ, { chunkSize, cells, maxFeatures });
@@ -126,7 +136,7 @@ function generateHighlandsChunkDressing(seed = WORLD_SEED, chunkX = 0, chunkZ = 
 }
 
 function resolveDressingProfile(seed, { map, profile } = {}) {
-  return profile ?? map?.terrainProfile ?? (String(seed).includes("sunspice-wilds") ? "sunspice-wilds" : "highlands");
+  return profile ?? map?.terrainProfile ?? (String(seed).includes("sunspice-wilds") ? "sunspice-wilds" : String(seed).includes("jade-provinces") ? "jade-provinces" : "highlands");
 }
 
 function generateSunspiceChunkDressing(seed, chunkX, chunkZ, {
@@ -192,6 +202,200 @@ function generateSunspiceChunkDressing(seed, chunkX, chunkZ, {
   };
 }
 
+function generateJadeChunkDressing(seed, chunkX, chunkZ, {
+  chunkSize = WORLD_CONFIG.chunkSize,
+  cells = DEFAULT_CELLS,
+  maxFeatures = DEFAULT_MAX_FEATURES,
+} = {}) {
+  const seedHash = normalizeSeed(seed);
+  const features = [];
+  const counts = Object.fromEntries(FEATURE_TYPES.map((type) => [type, 0]));
+  const cellSize = chunkSize / cells;
+  const minX = chunkX * chunkSize;
+  const minZ = chunkZ * chunkSize;
+  const seenBiomes = new Set();
+
+  for (let iz = 0; iz < cells; iz += 1) {
+    for (let ix = 0; ix < cells; ix += 1) {
+      if (features.length >= maxFeatures) {
+        break;
+      }
+      const worldCellX = chunkX * cells + ix;
+      const worldCellZ = chunkZ * cells + iz;
+      const x = minX + (ix + 0.14 + hash2(seedHash ^ 0x6a0d15, worldCellX, worldCellZ) * 0.72) * cellSize;
+      const z = minZ + (iz + 0.14 + hash2(seedHash ^ 0x6a0d16, worldCellX, worldCellZ) * 0.72) * cellSize;
+      const terrain = sampleTerrain(seed, x, z, { profile: "jade-provinces" });
+      const roll = hash2(seedHash ^ 0x6a0d17, worldCellX, worldCellZ);
+      const density = forestDensity(seedHash, x, z);
+      seenBiomes.add(terrain.biome);
+
+      if (terrain.biome === "stone-forest") {
+        if (roll < 0.5) {
+          pushFeature(features, counts, createJadeFeature(seedHash, "stone-pillar", terrain, x, z, worldCellX, worldCellZ, 1.3, 1.05), maxFeatures);
+        } else if (roll < 0.66 && terrain.slope < 0.82) {
+          pushFeature(features, counts, createJadeFeature(seedHash, "mist-pine", terrain, x, z, worldCellX, worldCellZ, 0.9, 0.56), maxFeatures);
+        }
+      } else if (terrain.biome === "snowy-mountain") {
+        if (isJadeTempleGround(terrain) && roll < 0.16) {
+          pushFeature(features, counts, createJadeFeature(seedHash, "mountain-temple", terrain, x, z, worldCellX, worldCellZ, 0.9, 0.34), maxFeatures);
+        } else if (isJadeTempleGround(terrain) && roll < 0.24) {
+          pushFeature(features, counts, createJadeFeature(seedHash, "pagoda-tower", terrain, x, z, worldCellX, worldCellZ, 0.82, 0.28), maxFeatures);
+        } else if (roll < 0.34 && terrain.slope < 0.68) {
+          pushFeature(features, counts, createJadeFeature(seedHash, "mist-pine", terrain, x, z, worldCellX, worldCellZ, 0.76, 0.44), maxFeatures);
+        }
+      } else if (isJadeVillageGround(terrain)) {
+        if (terrain.biome === "forest" && roll < 0.38 + density * 0.2) {
+          pushFeature(features, counts, createJadeFeature(seedHash, "mist-pine", terrain, x, z, worldCellX, worldCellZ, 0.9, 0.58), maxFeatures);
+        } else if (roll < 0.2) {
+          pushFeature(features, counts, createJadeFeature(seedHash, "china-house", terrain, x, z, worldCellX, worldCellZ, 0.84, 0.34), maxFeatures);
+        } else if (roll < 0.28) {
+          pushFeature(features, counts, createJadeFeature(seedHash, "village-lantern", terrain, x, z, worldCellX, worldCellZ, 0.78, 0.28), maxFeatures);
+        }
+      }
+    }
+  }
+
+  addJadeVillageCluster(seedHash, seed, chunkX, chunkZ, chunkSize, features, counts, maxFeatures, seenBiomes);
+  addJadeTempleCluster(seedHash, seed, chunkX, chunkZ, chunkSize, features, counts, maxFeatures, seenBiomes);
+  addStoneForestCluster(seedHash, seed, chunkX, chunkZ, chunkSize, features, counts, maxFeatures, seenBiomes);
+  features.sort((a, b) => `${a.type}:${a.x.toFixed(3)}:${a.z.toFixed(3)}`.localeCompare(`${b.type}:${b.x.toFixed(3)}:${b.z.toFixed(3)}`));
+
+  return {
+    key: `${chunkX},${chunkZ}`,
+    seed,
+    chunkX,
+    chunkZ,
+    features,
+    stats: {
+      counts,
+      total: features.length,
+      maxFeatures,
+    },
+  };
+}
+
+function createJadeFeature(seedHash, type, terrain, x, z, worldCellX, worldCellZ, baseScale, scaleJitter) {
+  return {
+    type,
+    x,
+    y: terrain.height,
+    z,
+    yaw: hash2(seedHash ^ 0x6a0d18, worldCellX, worldCellZ) * Math.PI * 2,
+    scale: baseScale + hash2(seedHash ^ 0x6a0d19, worldCellX, worldCellZ) * scaleJitter,
+  };
+}
+
+function addJadeVillageCluster(seedHash, seed, chunkX, chunkZ, chunkSize, features, counts, maxFeatures, seenBiomes) {
+  if (!(seenBiomes.has("plains") || seenBiomes.has("forest")) || hash2(seedHash ^ 0xc417a, chunkX, chunkZ) > 0.56) {
+    return;
+  }
+  const minX = chunkX * chunkSize;
+  const minZ = chunkZ * chunkSize;
+  const centerX = minX + chunkSize * (0.22 + hash2(seedHash ^ 0xc417b, chunkX, chunkZ) * 0.56);
+  const centerZ = minZ + chunkSize * (0.22 + hash2(seedHash ^ 0xc417c, chunkX, chunkZ) * 0.56);
+  const yaw = hash2(seedHash ^ 0xc417d, chunkX, chunkZ) * Math.PI * 2;
+  const offsets = [
+    { ox: 0, oz: 0, type: "china-hall", scale: 1.15 },
+    { ox: 24, oz: 10, type: "china-house", scale: 0.92 },
+    { ox: -24, oz: 8, type: "china-house", scale: 0.94 },
+    { ox: 12, oz: -25, type: "china-house", scale: 0.88 },
+    { ox: -16, oz: -24, type: "pagoda-tower", scale: 0.76 },
+    { ox: 34, oz: -12, type: "china-house", scale: 0.82 },
+    { ox: -35, oz: -8, type: "china-house", scale: 0.8 },
+    { ox: 8, oz: 30, type: "village-lantern", scale: 0.78 },
+    { ox: -8, oz: 31, type: "village-lantern", scale: 0.78 },
+    { ox: 31, oz: 30, type: "china-house", scale: 0.76 },
+    { ox: -31, oz: 29, type: "china-house", scale: 0.78 },
+    { ox: 0, oz: -40, type: "village-lantern", scale: 0.72 },
+  ];
+  addJadeClusterFeatures(seedHash, seed, centerX, centerZ, yaw, offsets, chunkX, chunkZ, chunkSize, features, counts, maxFeatures, isJadeVillageGround);
+}
+
+function addJadeTempleCluster(seedHash, seed, chunkX, chunkZ, chunkSize, features, counts, maxFeatures, seenBiomes) {
+  if (!seenBiomes.has("snowy-mountain") || hash2(seedHash ^ 0x7e4f1e, chunkX, chunkZ) > 0.5) {
+    return;
+  }
+  const minX = chunkX * chunkSize;
+  const minZ = chunkZ * chunkSize;
+  const centerX = minX + chunkSize * (0.2 + hash2(seedHash ^ 0x7e4f1f, chunkX, chunkZ) * 0.6);
+  const centerZ = minZ + chunkSize * (0.2 + hash2(seedHash ^ 0x7e4f20, chunkX, chunkZ) * 0.6);
+  const yaw = hash2(seedHash ^ 0x7e4f21, chunkX, chunkZ) * Math.PI * 2;
+  const offsets = [
+    { ox: 0, oz: 0, type: "mountain-temple", scale: 1.04 },
+    { ox: 18, oz: 10, type: "pagoda-tower", scale: 0.78 },
+    { ox: -18, oz: 12, type: "mountain-temple", scale: 0.72 },
+    { ox: 10, oz: -18, type: "mist-pine", scale: 0.7 },
+    { ox: -12, oz: -20, type: "mist-pine", scale: 0.68 },
+  ];
+  addJadeClusterFeatures(seedHash, seed, centerX, centerZ, yaw, offsets, chunkX, chunkZ, chunkSize, features, counts, maxFeatures, isJadeTempleGround);
+}
+
+function addStoneForestCluster(seedHash, seed, chunkX, chunkZ, chunkSize, features, counts, maxFeatures, seenBiomes) {
+  if (!seenBiomes.has("stone-forest") || hash2(seedHash ^ 0x5707e1, chunkX, chunkZ) > 0.72) {
+    return;
+  }
+  const minX = chunkX * chunkSize;
+  const minZ = chunkZ * chunkSize;
+  const centerX = minX + chunkSize * (0.18 + hash2(seedHash ^ 0x5707e2, chunkX, chunkZ) * 0.64);
+  const centerZ = minZ + chunkSize * (0.18 + hash2(seedHash ^ 0x5707e3, chunkX, chunkZ) * 0.64);
+  const yaw = hash2(seedHash ^ 0x5707e4, chunkX, chunkZ) * Math.PI * 2;
+  const offsets = [
+    { ox: 0, oz: 0, type: "stone-pillar", scale: 1.55 },
+    { ox: 20, oz: 8, type: "stone-pillar", scale: 1.18 },
+    { ox: -18, oz: 12, type: "stone-pillar", scale: 1.05 },
+    { ox: 12, oz: -18, type: "mist-pine", scale: 0.78 },
+    { ox: -14, oz: -20, type: "stone-pillar", scale: 0.92 },
+  ];
+  addJadeClusterFeatures(seedHash, seed, centerX, centerZ, yaw, offsets, chunkX, chunkZ, chunkSize, features, counts, maxFeatures, isJadeStoneGround);
+}
+
+function addJadeClusterFeatures(seedHash, seed, centerX, centerZ, yaw, offsets, chunkX, chunkZ, chunkSize, features, counts, maxFeatures, predicate) {
+  const minX = chunkX * chunkSize;
+  const minZ = chunkZ * chunkSize;
+  const cos = Math.cos(yaw);
+  const sin = Math.sin(yaw);
+  for (let index = 0; index < offsets.length && features.length < maxFeatures; index += 1) {
+    const { ox, oz, type, scale } = offsets[index];
+    const x = centerX + ox * cos - oz * sin;
+    const z = centerZ + ox * sin + oz * cos;
+    if (x < minX + 8 || x > minX + chunkSize - 8 || z < minZ + 8 || z > minZ + chunkSize - 8) {
+      continue;
+    }
+    const terrain = sampleTerrain(seed, x, z, { profile: "jade-provinces" });
+    if (!predicate(terrain)) {
+      continue;
+    }
+    pushFeature(features, counts, {
+      type,
+      x,
+      y: terrain.height,
+      z,
+      yaw: yaw + (hash2(seedHash ^ 0x9add1e, chunkX * 31 + index, chunkZ * 37) - 0.5) * 0.58,
+      scale: scale * (0.86 + hash2(seedHash ^ 0x9add1f, chunkX * 41 + index, chunkZ * 43) * 0.3),
+    }, maxFeatures);
+  }
+}
+
+function isJadeVillageGround(terrain) {
+  return (terrain.biome === "plains" || terrain.biome === "forest")
+    && terrain.waterStrength < 0.08
+    && terrain.waterBankStrength < 0.16
+    && terrain.slope < 0.58;
+}
+
+function isJadeTempleGround(terrain) {
+  return terrain.biome === "snowy-mountain"
+    && terrain.height > 48
+    && terrain.waterStrength < 0.05
+    && terrain.slope < 0.82;
+}
+
+function isJadeStoneGround(terrain) {
+  return terrain.biome === "stone-forest"
+    && terrain.waterStrength < 0.1
+    && terrain.slope < 0.95;
+}
+
 function addJungleDressing(seedHash, features, counts, terrain, x, z, worldCellX, worldCellZ, roll, density, maxFeatures) {
   const treeChance = 0.32 + density * 0.42;
   if (roll < treeChance) {
@@ -211,14 +415,14 @@ function addRainforestDressing(seedHash, features, counts, terrain, x, z, worldC
 }
 
 function addDesertDressing(seedHash, features, counts, terrain, x, z, worldCellX, worldCellZ, roll, maxFeatures) {
-  if (terrain.waterBankStrength > 0.1 && roll < 0.6) {
-    pushFeature(features, counts, createSunspiceFeature(seedHash, "desert-palm", terrain, x, z, worldCellX, worldCellZ, 0.84, 0.48), maxFeatures);
-  } else if (roll < 0.08 && terrain.slope < 0.58) {
-    pushFeature(features, counts, createSunspiceFeature(seedHash, "desert-camp", terrain, x, z, worldCellX, worldCellZ, 0.86, 0.3), maxFeatures);
-  } else if (roll < 0.16 && terrain.slope < 0.72) {
-    pushFeature(features, counts, createSunspiceFeature(seedHash, "desert-ruin", terrain, x, z, worldCellX, worldCellZ, 0.76, 0.42), maxFeatures);
-  } else if (roll < 0.44 && terrain.slope < 0.74) {
-    pushFeature(features, counts, createSunspiceFeature(seedHash, "cactus", terrain, x, z, worldCellX, worldCellZ, 0.72, 0.66), maxFeatures);
+  if (terrain.waterBankStrength > 0.1 && roll < 0.72) {
+    pushFeature(features, counts, createSunspiceFeature(seedHash, "desert-palm", terrain, x, z, worldCellX, worldCellZ, 0.84, 0.56), maxFeatures);
+  } else if (roll < 0.12 && terrain.slope < 0.6) {
+    pushFeature(features, counts, createSunspiceFeature(seedHash, "desert-camp", terrain, x, z, worldCellX, worldCellZ, 0.86, 0.34), maxFeatures);
+  } else if (roll < 0.28 && terrain.slope < 0.74) {
+    pushFeature(features, counts, createSunspiceFeature(seedHash, "desert-ruin", terrain, x, z, worldCellX, worldCellZ, 0.78, 0.48), maxFeatures);
+  } else if (roll < 0.74 && terrain.slope < 0.78) {
+    pushFeature(features, counts, createSunspiceFeature(seedHash, "cactus", terrain, x, z, worldCellX, worldCellZ, 0.78, 0.74), maxFeatures);
   }
 }
 
@@ -241,7 +445,8 @@ function addBiomeCluster(seedHash, seed, chunkX, chunkZ, chunkSize, biome, featu
   };
   const primaryStructure = structureTypes[biome][0];
   const roll = hash2(seedHash ^ biomeSeed(biome), chunkX, chunkZ);
-  if (!seenBiomes.has(biome) || roll > 0.42 || features.length >= maxFeatures) {
+  const clusterChance = biome === "desert" ? 0.64 : 0.42;
+  if (!seenBiomes.has(biome) || roll > clusterChance || features.length >= maxFeatures) {
     return;
   }
 
